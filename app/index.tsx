@@ -1,11 +1,15 @@
 import { StyleSheet, Text, View } from "react-native";
 import React from "react";
 import { Link } from "expo-router";
+import { Stack } from "expo-router";
 
 type Props = {};
 
 const WelcomeScreen = (props: Props) => {
     return (
+        <>
+        <Stack.Screen options={{headerShown:false}}/>
+
         <View style={styles.container}>
             <Text>Welcome Screen</Text>
             <Link href="/signin" style={styles.link}>
@@ -15,6 +19,7 @@ const WelcomeScreen = (props: Props) => {
                 <Text>Go to SignUp Screen</Text>
             </Link>
         </View>
+        </>
     );
 };
 
@@ -27,9 +32,9 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
     link: {
-        marginVertical: 10,
+        marginVertical: 2,
         padding: 10,
-        backgroundColor: "#007AFF",
+        backgroundColor: "#eee",
         borderRadius: 5,
     },
 });
