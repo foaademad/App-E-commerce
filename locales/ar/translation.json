@@ -1,9 +1,27 @@
 {
-  "welcome": "مرحباً بكم في اتشاب",
-  "description": "الحل الشامل لجميع احتياجات التسوق الخاصة بك",
-  "continue_with_email": "المتابعة باستخدام البريد الإلكتروني",
-  "continue_with_gmail": "المتابعة باستخدام جيميل",
-  "continue_with_apple": "المتابعة باستخدام أبل",
-  "already_have_account": "هل لديك حساب بالفعل؟",
-  "sign_in": "تسجيل الدخول"
+  "welcome": {
+    "part1": "مرحبًا بك في Ch",
+    "highlight": "2",
+    "part2": "b"
+  },
+  "description": "استكشف أفضل تجربة تسوق",
+  "continue_with_email": "المتابعة بالبريد الإلكتروني",
+  "continue_with_gmail": "المتابعة بـ Gmail",
+  "continue_with_apple": "المتابعة بـ Apple",
+  "already_have_account": "هل لديك حساب بالفعل؟ ",
+  "sign_in": "تسجيل الدخول",
+   "login": {
+    "title": "تسجيل الدخول",
+    
+    "email": "الايميل*",
+    "password": "الباسورد*",
+    "forgot_password": "نسيت كلمه المرور ؟",
+    "login_button": "تسجيل الدخول",
+    "dont_have_account": "ليس لديك حساب ؟ ",
+    "sign_up": "انشاء حساب",
+    "email_invalid": "اكتب الايميل بشكل صحيح",
+    "email_required": "ادخل الايميل",
+    "password_min": "كلمة المرور يجب أن تكون 6 أحرف على الأقل",
+    "password_required": "كلمة المرور مطلوبة"
+  }
 }

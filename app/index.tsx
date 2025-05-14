@@ -7,39 +7,26 @@ import {
   View,
 } from "react-native";
 import React, { useState, useEffect } from "react";
-import { Link } from "expo-router";
 import { Stack } from "expo-router";
+import { useRouter } from "expo-router"; // استيراد useRouter
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import Animated, { FadeInDown, FadeInRight, FadeOutRight } from "react-native-reanimated";
-import { useTranslation } from 'react-i18next';
-import LanguageToggle from '../src/language/LanguageToggle';
-import { useLanguage } from '../src/context/LanguageContext';
+import { useTranslation } from "react-i18next";
+import LanguageToggle from "../src/language/LanguageToggle";
+import { useLanguage } from "../src/context/LanguageContext";
 
 type Props = {};
 const WelcomeScreen = (props: Props) => {
   const { t } = useTranslation();
   const { language } = useLanguage();
-  const [isRTL, setIsRTL] = useState(language === 'ar');
+  const [isRTL, setIsRTL] = useState(language === "ar");
+  const router = useRouter(); // استخدام useRouter
 
-  // useEffect(() => {
-  //   setIsRTL(language === 'ar');
-  //   // في صفحة المنتجات، يمكنك إضافة طلب API هنا لتحديث البيانات عند تغيير اللغة
-  //   // مثال:
-  //   /*
-  //   const fetchProductDetails = async () => {
-  //     try {
-  //       const response = await axios.get('https://your-api-endpoint/products/1', {
-  //         params: { lang: language },
-  //       });
-  //       setProduct(response.data);
-  //     } catch (error) {
-  //       console.error('Error fetching product:', error);
-  //     }
-  //   };
-  //   fetchProductDetails();
-  //   */
-  // }, [language]);
+  // تحديث isRTL عند تغيير اللغة
+  useEffect(() => {
+    setIsRTL(language === "ar");
+  }, [language]);
 
   return (
     <>
@@ -51,7 +38,7 @@ const WelcomeScreen = (props: Props) => {
       >
         <LanguageToggle />
 
-        <View style={[styles.container, isRTL && { direction: 'rtl' }]}>
+        <View style={[styles.container, isRTL && { direction: "rtl" }]}>
           <LinearGradient
             colors={[
               "transparent",
@@ -62,66 +49,75 @@ const WelcomeScreen = (props: Props) => {
           >
             <View style={styles.wrapper}>
               <Animated.Text
-                style={[styles.text, isRTL && { textAlign: 'right' }]}
+                style={[styles.text, isRTL && { textAlign: "right" }]}
                 entering={FadeInRight.delay(400).duration(300)}
                 exiting={FadeOutRight.delay(500).duration(300)}
               >
-                {t('welcome')}
+                <Text>{t("welcome.part1")}</Text>
+                <Text style={styles.highlightedNumber}>{t("welcome.highlight")}</Text>
+                <Text>{t("welcome.part2")}</Text>
               </Animated.Text>
               <Animated.Text
-                style={[styles.description, isRTL && { textAlign: 'right' }]}
+                style={[styles.description, isRTL && { textAlign: "right" }]}
                 entering={FadeInRight.delay(500).duration(300)}
                 exiting={FadeOutRight.delay(600).duration(300)}
               >
-                {t('description')}
+                {t("description")}
               </Animated.Text>
               <View style={styles.socialLoginWrapper}>
-                <Animated.View style={styles.link}
+                <Animated.View
+                  style={styles.link}
                   entering={FadeInDown.delay(600).duration(300)}
                   exiting={FadeInDown.delay(700).duration(300)}
                 >
-                  <Link href="/signup">
-                    <View style={[styles.linkContent, isRTL && { flexDirection: 'row-reverse' }]}>
+                  <TouchableOpacity
+                    onPress={() => router.push({ pathname: "/signup" })}
+                  >
+                    <View style={[styles.linkContent, isRTL && { flexDirection: "row-reverse" }]}>
                       <Ionicons name="mail-outline" size={18} color="black" />
                       <Text style={styles.linkText}>
-                        {t('continue_with_email')}
+                        {t("continue_with_email")}
                       </Text>
-                    </View>
-                  </Link>
-                </Animated.View>
-              </View>
-              <View style={styles.socialLoginWrapper}>
-                <Animated.View 
-                  entering={FadeInDown.delay(700).duration(300)}
-                  exiting={FadeInDown.delay(800).duration(300)}
-                >
-                  <TouchableOpacity style={styles.link}>
-                    <View style={[styles.linkContent, isRTL && { flexDirection: 'row-reverse' }]}>
-                      <Ionicons name="logo-google" size={18} color="black" />
-                      <Text style={styles.linkText}>{t('continue_with_gmail')}</Text>
                     </View>
                   </TouchableOpacity>
                 </Animated.View>
               </View>
               <View style={styles.socialLoginWrapper}>
-                <Animated.View 
+                <Animated.View
+                  entering={FadeInDown.delay(700).duration(300)}
+                  exiting={FadeInDown.delay(800).duration(300)}
+                >
+                  <TouchableOpacity style={styles.link}>
+                    <View style={[styles.linkContent, isRTL && { flexDirection: "row-reverse" }]}>
+                      <Ionicons name="logo-google" size={18} color="black" />
+                      <Text style={styles.linkText}>{t("continue_with_gmail")}</Text>
+                    </View>
+                  </TouchableOpacity>
+                </Animated.View>
+              </View>
+              <View style={styles.socialLoginWrapper}>
+                <Animated.View
                   entering={FadeInDown.delay(800).duration(300)}
                   exiting={FadeInDown.delay(900).duration(300)}
                 >
                   <TouchableOpacity style={styles.link}>
-                    <View style={[styles.linkContent, isRTL && { flexDirection: 'row-reverse' }]}>
+                    <View style={[styles.linkContent, isRTL && { flexDirection: "row-reverse" }]}>
                       <Ionicons name="logo-apple" size={18} color="black" />
-                      <Text style={styles.linkText}>{t('continue_with_apple')}</Text>
+                      <Text style={styles.linkText}>{t("continue_with_apple")}</Text>
                     </View>
                   </TouchableOpacity>
                 </Animated.View>
               </View>
 
-              <Text style={[styles.loginTxt, isRTL && { textAlign: 'right' }]}>
-                {t('already_have_account')}
-                <Link href="/signin">
-                  <Text style={[styles.linkTextSign, isRTL && { textAlign: 'right' }]}>{t('sign_in')}</Text>
-                </Link>
+              <Text style={[styles.loginTxt, isRTL && { textAlign: "right" }]}>
+                {t("already_have_account")}
+                <TouchableOpacity
+                  onPress={() => router.push({ pathname: "/signin" })}
+                >
+                  <Text style={[styles.linkTextSign, isRTL && { textAlign: "right" }]}>
+                    {t("sign_in")}
+                  </Text>
+                </TouchableOpacity>
               </Text>
             </View>
           </LinearGradient>
@@ -148,6 +144,7 @@ const styles = StyleSheet.create<{
   linkText: TextStyle;
   loginTxt: TextStyle;
   linkTextSign: TextStyle;
+  highlightedNumber: TextStyle;
 }>({
   background: {
     flex: 1,
@@ -221,12 +218,21 @@ const styles = StyleSheet.create<{
     paddingBottom: 10,
     color: "rgb(136, 136, 136)",
     textAlign: "center",
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
   },
   linkTextSign: {
-    marginRight: 8,
+    marginHorizontal: 8,
     color: "rgb(54, 199, 246)",
     fontSize: 15,
     fontWeight: "bold",
     textTransform: "capitalize",
+
+  },
+  highlightedNumber: {
+    color: "rgb(54, 199, 246)",
+    fontWeight: "bold",
   },
 });
