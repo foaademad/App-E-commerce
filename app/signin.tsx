@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     paddingHorizontal: 15,
     marginBottom: 10,
-    height: 50,
+    height: 51,
   },
   input: {
     flex: 1,
