@@ -12,10 +12,8 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "../src/context/LanguageContext";
-import LanguageToggle from "../src/language/LanguageToggle";
 import { Formik } from "formik";
 import * as Yup from "yup";
-import { LinearGradient } from "expo-linear-gradient";
 
 // مخطط التحقق من صحة الإدخال باستخدام Yup
 const LoginSchema = (t: any) =>
@@ -33,6 +31,7 @@ const LoginScreen = (props: Props) => {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const [isRTL, setIsRTL] = useState(language === "ar");
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -42,138 +41,123 @@ const LoginScreen = (props: Props) => {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
+      <View style={[styles.container, isRTL && { direction: "rtl" }]}>
+        <View style={styles.wrapper}>
+          <Text style={[styles.title]}>{t("login.title")}</Text>
 
-          <View style={[styles.container, isRTL && { direction: "rtl" }]}>
-            <View style={styles.wrapper}>
-              <Text style={[styles.title]}>
-                {t("login.title")}
-              </Text>
-
-              <Formik
-                initialValues={{ email: "", password: "" }}
-                validationSchema={LoginSchema(t)}
-                onSubmit={(values, { setSubmitting }) => {
-                  console.log("Login Values:", values);
-                  setSubmitting(false);
-                }}
-              >
-                {({
-                  handleChange,
-                  handleBlur,
-                  handleSubmit,
-                  values,
-                  errors,
-                  touched,
-                  isSubmitting,
-                }) => (
-                  <View
-                    style={[styles.form, isRTL && { alignItems: "flex-end" }]}
-                  >
-                    {/* Email Input */}
-                    <View
-                      style={[
-                        styles.inputContainer,
-                        isRTL && { flexDirection: "row-reverse" },
-                      ]}
-                    >
-                      <Ionicons name="mail-outline" size={20} color="#333" />
-                      <TextInput
-                        style={[styles.input, isRTL && { textAlign: "right" }]}
-                        placeholder={t("login.email")}
-                        onChangeText={handleChange("email")}
-                        onBlur={handleBlur("email")}
-                        value={values.email}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                      />
-                    </View>
-                    {touched.email && errors.email && (
-                      <Text style={styles.errorText}>{errors.email}</Text>
-                    )}
-
-                    {/* Password Input */}
-                    <View
-                      style={[
-                        styles.inputContainer,
-                        isRTL && { flexDirection: "row-reverse" },
-                      ]}
-                    >
-                      <Ionicons
-                        name="lock-closed-outline"
-                        size={20}
-                        color="#333"
-                      />
-                      <TextInput
-                        style={[styles.input, isRTL && { textAlign: "right" }]}
-                        placeholder={t("login.password")}
-                        onChangeText={handleChange("password")}
-                        onBlur={handleBlur("password")}
-                        value={values.password}
-                        secureTextEntry
-                        autoCapitalize="none"
-                      />
-                      <Ionicons
-                        name="eye-outline"
-                        size={20}
-                        color="#333"
-                        style={styles.eyeIcon}
-                      />
-                    </View>
-                    {touched.password && errors.password && (
-                      <Text style={styles.errorText}>{errors.password}</Text>
-                    )}
-
-                    {/* Forgot Password */}
-                    <TouchableOpacity onPress={() => {}}>
-                      <Text
-                        style={[
-                          styles.forgotText,
-                          isRTL && { textAlign: "right" },
-                        ]}
-                      >
-                        {t("login.forgot_password")}
-                      </Text>
-                    </TouchableOpacity>
-
-                    {/* Login Button */}
-                    <TouchableOpacity
-                      style={styles.loginButton}
-                      onPress={() => handleSubmit()}
-                      disabled={isSubmitting}
-                    >
-                      <Text style={styles.loginButtonText}>
-                        {t("login.login_button")}
-                      </Text>
-                    </TouchableOpacity>
-
-                    {/* Create Account Link */}
-                    <TouchableOpacity
-                      onPress={() => router.push({ pathname: "/signup" })}
-                    >
-                      <Text
-                        style={[
-                          styles.signupText,
-                          
-                        ]}
-                      >
-                        {t("login.dont_have_account")}
-                        <Text style={styles.signupLink}>
-                          {t("login.sign_up")}
-                        </Text>
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
+          <Formik
+            initialValues={{ email: "", password: "" }}
+            validationSchema={LoginSchema(t)}
+            onSubmit={(values, { setSubmitting }) => {
+              console.log("Login Values:", values);
+              setSubmitting(false);
+              // إعادة توجيه المستخدم إلى الصفحة الرئيسية
+              router.push({ pathname: "/(tabs)" });
+            }}
+          >
+            {({
+              handleChange,
+              handleBlur,
+              handleSubmit,
+              values,
+              errors,
+              touched,
+              isSubmitting,
+            }) => (
+              <View style={[styles.form, isRTL && { alignItems: "flex-end" }]}>
+                {/* Email Input */}
+                <View
+                  style={[
+                    styles.inputContainer,
+                    isRTL && { flexDirection: "row-reverse" },
+                  ]}
+                >
+                  <Ionicons name="mail-outline" size={20} color="#333" />
+                  <TextInput
+                    style={[styles.input, isRTL && { textAlign: "right" }]}
+                    placeholder={t("login.email")}
+                    onChangeText={handleChange("email")}
+                    onBlur={handleBlur("email")}
+                    value={values.email}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                </View>
+                {touched.email && errors.email && (
+                  <Text style={styles.errorText}>{errors.email}</Text>
                 )}
-              </Formik>
-            </View>
-          </View>
 
+                {/* Password Input */}
+                <View
+                  style={[
+                    styles.inputContainer,
+                    isRTL && { flexDirection: "row-reverse" },
+                  ]}
+                >
+                  <Ionicons name="lock-closed-outline" size={20} color="#333" />
+                  <TextInput
+                    style={[styles.input, isRTL && { textAlign: "right" }]}
+                    placeholder={t("login.password")}
+                    onChangeText={handleChange("password")}
+                    onBlur={handleBlur("password")}
+                    value={values.password}
+                    secureTextEntry={!showPassword}
+                    autoCapitalize="none"
+                  />
+                  <TouchableOpacity
+                    onPress={() => setShowPassword(!showPassword)}
+                    style={styles.eyeIconContainer}
+                  >
+                    <Ionicons
+                      name={showPassword ? "eye-outline" : "eye-off-outline"}
+                      size={20}
+                      color="#333"
+                    />
+                  </TouchableOpacity>
+                </View>
+                {touched.password && errors.password && (
+                  <Text style={styles.errorText}>{errors.password}</Text>
+                )}
+
+                {/* Forgot Password */}
+                <TouchableOpacity onPress={() => {}}>
+                  <Text
+                    style={[styles.forgotText, isRTL && { textAlign: "right" }]}
+                  >
+                    {t("login.forgot_password")}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Login Button */}
+                <TouchableOpacity
+                  style={styles.loginButton}
+                  onPress={() => handleSubmit()}
+                  disabled={isSubmitting}
+                >
+                  <Text style={styles.loginButtonText}>
+                    {t("login.login_button")}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Create Account Link */}
+                <TouchableOpacity
+                  onPress={() => router.push({ pathname: "/signup" })}
+                >
+                  <Text style={[styles.signupText]}>
+                    {t("login.dont_have_account")}
+                    <Text style={styles.signupLink}>{t("login.sign_up")}</Text>
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </Formik>
+        </View>
+      </View>
     </>
   );
 };
 
 export default LoginScreen;
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -246,8 +230,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#333",
   },
-  eyeIcon: {
-    marginLeft: 10,
+  eyeIconContainer: {
+    padding: 5,
   },
   errorText: {
     color: "red",

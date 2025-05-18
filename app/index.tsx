@@ -89,7 +89,7 @@ const WelcomeScreen = (props: Props) => {
                 >
                   <TouchableOpacity style={styles.link}>
                     <View style={[styles.linkContent, isRTL && { flexDirection: "row-reverse" }]}>
-                      <Ionicons name="logo-google" size={18} color="black" />
+                      <Ionicons name="logo-google" size={18} color="red" />
                       <Text style={styles.linkText}>{t("continue_with_gmail")}</Text>
                     </View>
                   </TouchableOpacity>
@@ -102,7 +102,7 @@ const WelcomeScreen = (props: Props) => {
                 >
                   <TouchableOpacity style={styles.link}>
                     <View style={[styles.linkContent, isRTL && { flexDirection: "row-reverse" }]}>
-                      <Ionicons name="logo-apple" size={18} color="black" />
+                      <Ionicons name="logo-facebook" size={18} color="blue" />
                       <Text style={styles.linkText}>{t("continue_with_apple")}</Text>
                     </View>
                   </TouchableOpacity>
