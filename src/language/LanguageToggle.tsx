@@ -35,6 +35,7 @@ const styles = StyleSheet.create({
     top: 10,
     right: 10,
     zIndex: 10,
+    paddingVertical: 25,
   },
   languageButton: {
     flexDirection: 'row',

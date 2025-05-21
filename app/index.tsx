@@ -15,6 +15,7 @@ import Animated, { FadeInDown, FadeInRight, FadeOutRight } from "react-native-re
 import { useTranslation } from "react-i18next";
 import LanguageToggle from "../src/language/LanguageToggle";
 import { useLanguage } from "../src/context/LanguageContext";
+import { ViewStyle, TextStyle, ImageStyle } from "react-native";
 
 type Props = {};
 const WelcomeScreen = (props: Props) => {
@@ -129,7 +130,6 @@ const WelcomeScreen = (props: Props) => {
 
 export default WelcomeScreen;
 
-import { ViewStyle, TextStyle, ImageStyle } from "react-native";
 
 const styles = StyleSheet.create<{
   background: ViewStyle;
@@ -150,11 +150,13 @@ const styles = StyleSheet.create<{
     flex: 1,
     width: "100%",
     height: "100%",
+    
   },
   container: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    
   },
   gradient: {
     flex: 1,
@@ -165,12 +167,15 @@ const styles = StyleSheet.create<{
     bottom: 0,
     justifyContent: "flex-end",
     alignItems: "center",
+
   },
   wrapper: {
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 20,
+    paddingVertical: 20,
+    paddingHorizontal: 20,
   },
   text: {
     fontSize: 24,

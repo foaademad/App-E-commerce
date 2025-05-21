@@ -1,9 +1,11 @@
-import { LanguageProvider } from '@/src/context/LanguageContext';
+import { LanguageProvider } from '../src/context/LanguageContext';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
+// Import i18n configuration
+import '../src/config/i18n';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
