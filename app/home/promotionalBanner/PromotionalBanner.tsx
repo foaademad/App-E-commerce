@@ -72,5 +72,5 @@ const PromotionalBanner = () => {
     </TouchableOpacity>
   );
 };
-
+  
 export default PromotionalBanner;

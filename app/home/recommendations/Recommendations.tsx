@@ -6,8 +6,6 @@ import styles from '@/styles/home';
 import { Link } from 'expo-router';
 import { ChevronRight } from 'lucide-react-native';
 import { useLanguage } from '../../../src/context/LanguageContext';
-
-const { t } = useTranslation();
 const ProductItem = ({ item }: { item: any }) => {
 
   return (
@@ -56,19 +54,20 @@ const ProductItem = ({ item }: { item: any }) => {
 };
 
 const Recommendations = () => {
+  const { t } = useTranslation();
   const { language } = useLanguage();
   const renderProductItem = ({ item }: { item: any }) => <ProductItem item={item} />;
 
   return (
     <View style={{ marginVertical: 16 }}>
-      <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center',marginHorizontal: 10 }}>
-        <Text style={styles.sectionTitle}>{t('Best Sellers')}</Text>
-        <Link href="bestSellers">
-          <Text style={styles.seeAll}>{t('See All')}</Text>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',marginHorizontal: 10 }}>
+        <Text style={styles.sectionTitle}>{t('Recommendations')}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', }}>
+          <Text style={styles.seeAll}>See All</Text>
           <ChevronRight size={16} color="#36c7f6" style={{ 
             transform: [{ rotate: language === 'ar' ? '180deg' : '0deg' }] 
           }} />
-        </Link>
+        </View>
       </View>
       <FlatList
         data={recommendations}

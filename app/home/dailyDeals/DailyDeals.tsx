@@ -6,8 +6,6 @@ import  dailyDeals  from './dailyDealsData';
 import styles from '@/styles/home';
 import { useLanguage } from '../../../src/context/LanguageContext';
 
-const { t } = useTranslation();
-
 const DealItem = ({ item }: { item: any }) => {
   return (
     <TouchableOpacity
@@ -71,23 +69,24 @@ const DealItem = ({ item }: { item: any }) => {
 };
 
 const DailyDeals = () => {
+  const { t } = useTranslation();
   const { language } = useLanguage();
   const renderDealItem = ({ item }: { item: any }) => <DealItem item={item} />;
 
   return (
     <View style={{
-      marginVertical: 16,
+     
       backgroundColor: '#f9f9f9',
       paddingVertical: 16,
     }}>
-      <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center',marginHorizontal: 10 }}>
-        <Text style={styles.sectionTitle}>{t('Best Sellers')}</Text>
-        <Link href="bestSellers">
-          <Text style={styles.seeAll}>{t('See All')}</Text>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',marginHorizontal: 10 }}>
+        <Text style={styles.sectionTitle}>{t('Daily Deals')}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', }}>
+          <Text style={styles.seeAll}>See All</Text>
           <ChevronRight size={16} color="#36c7f6" style={{ 
             transform: [{ rotate: language === 'ar' ? '180deg' : '0deg' }] 
           }} />
-        </Link>
+        </View>
       </View>
       <FlatList
         data={dailyDeals}

@@ -58,7 +58,7 @@ export default StyleSheet.create({
       fontFamily: 'Poppins-Medium',
       color: '#36c7f6',
       textAlign: 'center',
-      marginRight: 16,
+      
 
   },
 });
