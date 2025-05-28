@@ -1,31 +1,32 @@
-
-
-import React, { useEffect, useState } from 'react';
-import { View, ScrollView, Animated, TextInput } from 'react-native';
-import { Search } from 'lucide-react-native';
-import { useTranslation } from 'react-i18next';
+import { getProducts } from '@/services/api';
 import { useLanguage } from '@/src/context/LanguageContext';
 import styles from '@/styles/home';
+import { Search } from 'lucide-react-native';
+import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Animated, ScrollView, TextInput, View } from 'react-native';
 import EnhancedCarousel from '../home/banners/Banners';
-import Categories from '../home/categories/Categories';
 import BestSellers from '../home/bestSellers/BestSellers';
+import Categories from '../home/categories/Categories';
 import DailyDeals from '../home/dailyDeals/DailyDeals';
-import Recommendations from '../home/recommendations/Recommendations';
+import FeaturedBrands from '../home/featuredBrands/FeaturedBrands';
+import NewArrivals from '../home/newArrivals/NewArrivals';
 import PromotionalBanner from '../home/promotionalBanner/PromotionalBanner';
-import { getProducts } from '@/services/api';
+import Recommendations from '../home/recommendations/Recommendations';
+import Trending from '../home/trending/Trending';
 
 const HomeScreen = () => {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const [loading, setLoading] = useState(true);
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState<any[]>([]);
   const fadeAnim = useState(new Animated.Value(0))[0];
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const data = await getProducts();
-        setProducts(data);
+        setProducts(data as any[]);
         setLoading(false);
         Animated.timing(fadeAnim, {
           toValue: 1,
@@ -42,12 +43,12 @@ const HomeScreen = () => {
 
   const dynamicSearchContainerStyle = {
     ...styles.searchContainer,
-    flexDirection: language === 'ar' ? 'row-reverse' : 'row',
+    flexDirection: language === 'ar' ? 'row-reverse' : 'row' as 'row-reverse' | 'row',
   };
 
   const dynamicSearchBarStyle = {
     ...styles.searchBar,
-    flexDirection: language === 'ar' ? 'row-reverse' : 'row',
+    flexDirection: language === 'ar' ? 'row-reverse' : 'row' as 'row-reverse' | 'row',
   };
 
   const dynamicSearchIconStyle = {
@@ -72,8 +73,11 @@ const HomeScreen = () => {
         <Animated.View style={{ opacity: fadeAnim }}>
           <EnhancedCarousel />
           <Categories />
+          <NewArrivals />
           <BestSellers />
+          <FeaturedBrands />
           <DailyDeals />
+          <Trending />
           <Recommendations />
           <PromotionalBanner />
         </Animated.View>

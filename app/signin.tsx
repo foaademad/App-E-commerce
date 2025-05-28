@@ -1,19 +1,19 @@
-import React, { useState, useEffect } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { Stack, useRouter } from "expo-router";
+import { Formik } from "formik";
+import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
+  Animated,
+  Dimensions,
   StyleSheet,
   Text,
-  View,
   TextInput,
   TouchableOpacity,
-  ImageBackground,
+  View
 } from "react-native";
-import { Stack } from "expo-router";
-import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import { useTranslation } from "react-i18next";
-import { useLanguage } from "../src/context/LanguageContext";
-import { Formik } from "formik";
 import * as Yup from "yup";
+import { useLanguage } from "../src/context/LanguageContext";
 
 // مخطط التحقق من صحة الإدخال باستخدام Yup
 const LoginSchema = (t: any) =>
@@ -33,16 +33,75 @@ const LoginScreen = (props: Props) => {
   const [isRTL, setIsRTL] = useState(language === "ar");
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+  const [balls] = useState(() => Array(5).fill(0).map(() => ({
+    x: new Animated.Value(Math.random() * Dimensions.get('window').width),
+    y: new Animated.Value(Math.random() * Dimensions.get('window').height),
+    size: Math.random() * 50 + 50,
+  })));
 
   useEffect(() => {
     setIsRTL(language === "ar");
   }, [language]);
 
+  useEffect(() => {
+    const animateBalls = () => {
+      const animations = balls.map(ball => {
+        return Animated.parallel([
+          Animated.sequence([
+            Animated.timing(ball.x, {
+              toValue: Math.random() * Dimensions.get('window').width,
+              duration: 5000 + Math.random() * 5000,
+              useNativeDriver: true,
+            }),
+            Animated.timing(ball.x, {
+              toValue: Math.random() * Dimensions.get('window').width,
+              duration: 5000 + Math.random() * 5000,
+              useNativeDriver: true,
+            }),
+          ]),
+          Animated.sequence([
+            Animated.timing(ball.y, {
+              toValue: Math.random() * Dimensions.get('window').height,
+              duration: 5000 + Math.random() * 5000,
+              useNativeDriver: true,
+            }),
+            Animated.timing(ball.y, {
+              toValue: Math.random() * Dimensions.get('window').height,
+              duration: 5000 + Math.random() * 5000,
+              useNativeDriver: true,
+            }),
+          ]),
+        ]);
+      });
+
+      Animated.parallel(animations).start(() => animateBalls());
+    };
+
+    animateBalls();
+  }, []);
+
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <View style={[styles.container, isRTL && { direction: "rtl" }]}>
-        <View style={styles.wrapper}>
+        {balls.map((ball, index) => (
+          <Animated.View
+            key={index}
+            style={[
+              styles.ball,
+              {
+                width: ball.size,
+                height: ball.size,
+                transform: [
+                  { translateX: ball.x },
+                  { translateY: ball.y },
+                ],
+                backgroundColor: `rgba(54, 199, 246, ${0.1 + index * 0.1})`,
+              },
+            ]}
+          />
+        ))}
+        <View style={[styles.wrapper, styles.blurContainer]}>
           <Text style={[styles.title]}>{t("login.title")}</Text>
 
           <Formik
@@ -164,24 +223,39 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
+    backgroundColor: "#f5f7fa",
+    overflow: "hidden",
+  },
+  ball: {
+    position: "absolute",
+    borderRadius: 1000,
+    opacity: 0.6,
   },
   wrapper: {
     width: "100%",
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 20,
+    maxWidth: 400,
+    // borderRadius: 20,
+    padding: 30,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
+    shadowRadius: 8,
+    elevation: 8,
+    borderRadius: 20,
+    backdropFilter: "blur(10px)",
+    backgroundColor: "transparent",
+  },
+  blurContainer: {
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.2)",
   },
   title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#333",
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#1a1a1a",
     textAlign: "center",
-    marginTop: 20,
+    marginTop: 10,
     marginBottom: 40,
   },
   subtitle: {
@@ -195,10 +269,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "#fff",
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 25,
-    paddingVertical: 10,
-    marginBottom: 10,
+    borderColor: "#e0e0e0",
+    borderRadius: 12,
+    paddingVertical: 12,
+    marginBottom: 12,
     width: "100%",
   },
   socialButtonText: {
@@ -209,7 +283,7 @@ const styles = StyleSheet.create({
   orText: {
     textAlign: "center",
     color: "#666",
-    marginVertical: 10,
+    marginVertical: 15,
   },
   form: {
     width: "100%",
@@ -217,57 +291,65 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#f8f9fa",
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 25,
-    paddingHorizontal: 15,
-    marginBottom: 10,
-    height: 51,
+    borderColor: "#e0e0e0",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    marginBottom: 12,
+    height: 54,
   },
   input: {
     flex: 1,
     fontSize: 16,
     color: "#333",
+    paddingHorizontal: 8,
   },
   eyeIconContainer: {
-    padding: 5,
+    padding: 8,
   },
   errorText: {
-    color: "red",
+    color: "#ff3b30",
     fontSize: 12,
-    marginBottom: 10,
+    marginBottom: 8,
+    marginLeft: 4,
     textAlign: "left",
   },
   forgotText: {
     color: "#36C7F6",
     fontSize: 14,
     textAlign: "right",
-    marginBottom: 20,
+    marginBottom: 24,
+    fontWeight: "500",
   },
   loginButton: {
     backgroundColor: "#36C7F6",
-    borderRadius: 25,
-    paddingVertical: 10,
+    borderRadius: 12,
+    paddingVertical: 14,
     alignItems: "center",
     justifyContent: "center",
     width: "100%",
-    marginBottom: 10,
+    marginBottom: 16,
+    shadowColor: "#36C7F6",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
   loginButtonText: {
     color: "#fff",
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: "600",
   },
   signupText: {
     fontSize: 14,
     color: "#666",
     textAlign: "center",
-    
+    marginTop: 8,
   },
   signupLink: {
     color: "#36C7F6",
-    fontWeight: "bold",
+    fontWeight: "600",
     marginLeft: 5,
   },
   background: {
@@ -284,6 +366,5 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    
   },
 });

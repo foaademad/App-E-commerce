@@ -1,20 +1,20 @@
-import React, { useState, useEffect } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { Stack, useRouter } from "expo-router";
+import { Formik } from "formik";
+import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
+  Animated,
+  Dimensions,
+  ScrollView,
   StyleSheet,
   Text,
-  View,
   TextInput,
   TouchableOpacity,
-  ScrollView,
-  Platform,
+  View
 } from "react-native";
-import { Stack } from "expo-router";
-import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import { useTranslation } from "react-i18next";
-import { useLanguage } from "../src/context/LanguageContext";
-import { Formik } from "formik";
 import * as Yup from "yup";
+import { useLanguage } from "../src/context/LanguageContext";
 
 // مخطط التحقق من صحة الإدخال باستخدام Yup للمستخدم العادي
 const RegularUserSchema = (t: any) =>
@@ -63,10 +63,52 @@ const SignupScreen = () => {
   const [accountType, setAccountType] = useState("user"); // user, company
   const [userType, setUserType] = useState("regular"); // regular, marketer
   const router = useRouter();
+  const [balls] = useState(() => Array(5).fill(0).map(() => ({
+    x: new Animated.Value(Math.random() * Dimensions.get('window').width),
+    y: new Animated.Value(Math.random() * Dimensions.get('window').height),
+    size: Math.random() * 50 + 50,
+  })));
 
   useEffect(() => {
     setIsRTL(language === "ar");
   }, [language]);
+
+  useEffect(() => {
+    const animateBalls = () => {
+      const animations = balls.map(ball => {
+        return Animated.parallel([
+          Animated.sequence([
+            Animated.timing(ball.x, {
+              toValue: Math.random() * Dimensions.get('window').width,
+              duration: 5000 + Math.random() * 5000,
+              useNativeDriver: true,
+            }),
+            Animated.timing(ball.x, {
+              toValue: Math.random() * Dimensions.get('window').width,
+              duration: 5000 + Math.random() * 5000,
+              useNativeDriver: true,
+            }),
+          ]),
+          Animated.sequence([
+            Animated.timing(ball.y, {
+              toValue: Math.random() * Dimensions.get('window').height,
+              duration: 5000 + Math.random() * 5000,
+              useNativeDriver: true,
+            }),
+            Animated.timing(ball.y, {
+              toValue: Math.random() * Dimensions.get('window').height,
+              duration: 5000 + Math.random() * 5000,
+              useNativeDriver: true,
+            }),
+          ]),
+        ]);
+      });
+
+      Animated.parallel(animations).start(() => animateBalls());
+    };
+
+    animateBalls();
+  }, []);
 
   const getInitialValues = () => {
     if (accountType === "company") {
@@ -125,7 +167,24 @@ const SignupScreen = () => {
         showsVerticalScrollIndicator={false}
       >
         <View style={[styles.container, isRTL && { direction: "rtl" }]}>
-          <View style={styles.wrapper}>
+          {balls.map((ball, index) => (
+            <Animated.View
+              key={index}
+              style={[
+                styles.ball,
+                {
+                  width: ball.size,
+                  height: ball.size,
+                  transform: [
+                    { translateX: ball.x },
+                    { translateY: ball.y },
+                  ],
+                  backgroundColor: `rgba(54, 199, 246, ${0.1 + index * 0.1})`,
+                },
+              ]}
+            />
+          ))}
+          <View style={[styles.wrapper, styles.blurContainer]}>
             <Text style={styles.title}>{t("signup.title") }</Text>
 
             {/* اختيار نوع الحساب */}
@@ -476,17 +535,31 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
+    backgroundColor: "#f5f7fa",
+    overflow: "hidden",
+  },
+  ball: {
+    position: "absolute",
+    borderRadius: 1000,
+    opacity: 0.6,
   },
   wrapper: {
     width: "100%",
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 20,
+    maxWidth: 400,
+    backgroundColor: "transparent",
+    borderRadius: 20,
+    padding: 30,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
+    shadowRadius: 8,
+    elevation: 8,
+    backdropFilter: "blur(10px)",
+  },
+  blurContainer: {
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.2)",
   },
   title: {
     fontSize: 24,
