@@ -1,22 +1,174 @@
-import { StyleSheet, Text, View } from 'react-native'
-import React from 'react'
+import { useShop } from '@/src/context/ShopContext';
+import { Minus, Plus, Trash2 } from 'lucide-react-native';
+import React from 'react';
+import { useTranslation } from 'react-i18next';
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-type Props = {}
+const CartScreen = () => {
+  const { t } = useTranslation();
+  const { cart, removeFromCart } = useShop();
 
-const CartScreen = (props: Props) => {
+  const total = cart.reduce((sum, item) => sum + item.price, 0);
+
   return (
     <View style={styles.container}>
-      <Text>Cart Screen</Text>
-    </View>
-  )
-}
+      <View style={styles.header}>
+        <Text style={styles.title}>{t('Shopping Cart')}</Text>
+        <Text style={styles.itemCount}>{cart.length} {t('items')}</Text>
+      </View>
 
-export default CartScreen
+      <ScrollView style={styles.content}>
+        {cart.map((item) => (
+          <View key={item.id} style={styles.cartItem}>
+            <Image source={{ uri: item.image }} style={styles.itemImage} />
+            <View style={styles.itemDetails}>
+              <Text style={styles.itemName}>{item.name}</Text>
+              <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
+              <View style={styles.quantityContainer}>
+                <TouchableOpacity style={styles.quantityButton}>
+                  <Minus size={16} color="#666" />
+                </TouchableOpacity>
+                <Text style={styles.quantity}>1</Text>
+                <TouchableOpacity style={styles.quantityButton}>
+                  <Plus size={16} color="#666" />
+                </TouchableOpacity>
+              </View>
+            </View>
+            <TouchableOpacity 
+              style={styles.removeButton}
+              onPress={() => removeFromCart(item.id)}
+            >
+              <Trash2 size={20} color="#ff3b30" />
+            </TouchableOpacity>
+          </View>
+        ))}
+      </ScrollView>
+
+      <View style={styles.footer}>
+        <View style={styles.totalContainer}>
+          <Text style={styles.totalLabel}>{t('Total')}</Text>
+          <Text style={styles.totalAmount}>${total.toFixed(2)}</Text>
+        </View>
+        <TouchableOpacity style={styles.checkoutButton}>
+          <Text style={styles.checkoutButtonText}>{t('Proceed to Checkout')}</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+};
+
+export default CartScreen;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#f5f7fa',
+  },
+  header: {
+    padding: 20,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  itemCount: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
+  },
+  content: {
+    flex: 1,
+    padding: 16,
+  },
+  cartItem: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  itemImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+  },
+  itemDetails: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  itemName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  itemPrice: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#36c7f6',
+    marginBottom: 8,
+  },
+  quantityContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  quantityButton: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#f5f5f5',
     justifyContent: 'center',
-    alignItems: 'center'
-  }
-})
+    alignItems: 'center',
+  },
+  quantity: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginHorizontal: 12,
+  },
+  removeButton: {
+    padding: 8,
+  },
+  footer: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+  },
+  totalContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  totalLabel: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+  },
+  totalAmount: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#36c7f6',
+  },
+  checkoutButton: {
+    backgroundColor: '#36c7f6',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+  },
+  checkoutButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+});

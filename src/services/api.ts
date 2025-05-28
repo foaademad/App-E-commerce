@@ -1,20 +1,90 @@
 // Mock API service
 // In a real app, this would connect to a backend API
 
-// Sample product data
-const products = [
-  { id: 1, title: 'Smartphone X', price: 699, image: 'https://images.pexels.com/photos/404280/pexels-photo-404280.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2', category: 'electronics', rating: 4.5 },
-  { id: 2, title: 'Laptop Pro', price: 1299, image: 'https://images.pexels.com/photos/18105/pexels-photo.jpg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2', category: 'electronics', rating: 4.8 },
-  { id: 3, title: 'Designer Watch', price: 199, image: 'https://images.pexels.com/photos/190819/pexels-photo-190819.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2', category: 'jewelry', rating: 4.2 },
-  { id: 4, title: 'Cotton T-Shirt', price: 29, image: 'https://images.pexels.com/photos/5868207/pexels-photo-5868207.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2', category: 'clothing', rating: 4.0 },
-  { id: 5, title: 'Smart Speaker', price: 89, image: 'https://images.pexels.com/photos/7974/pexels-photo.jpg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2', category: 'electronics', rating: 4.3 },
-  { id: 6, title: 'Running Shoes', price: 119, image: 'https://images.pexels.com/photos/2529148/pexels-photo-2529148.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2', category: 'sports', rating: 4.6 },
-  { id: 7, title: 'Gold Necklace', price: 349, image: 'https://images.pexels.com/photos/10983713/pexels-photo-10983713.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2', category: 'jewelry', rating: 4.7 },
-  { id: 8, title: 'Wireless Earbuds', price: 149, image: 'https://images.pexels.com/photos/3780681/pexels-photo-3780681.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2', category: 'electronics', rating: 4.4 },
-  { id: 9, title: 'Stylish Sunglasses', price: 79, image: 'https://images.pexels.com/photos/701877/pexels-photo-701877.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2', category: 'accessories', rating: 4.1 },
-  { id: 10, title: 'Smart Watch', price: 249, image: 'https://images.pexels.com/photos/437037/pexels-photo-437037.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2', category: 'electronics', rating: 4.5 },
-  { id: 11, title: 'Leather Wallet', price: 59, image: 'https://images.pexels.com/photos/2079438/pexels-photo-2079438.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2', category: 'accessories', rating: 4.2 },
-  { id: 12, title: 'Fitness Tracker', price: 79, image: 'https://images.pexels.com/photos/4397840/pexels-photo-4397840.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2', category: 'electronics', rating: 4.3 },
+import { Product } from '../types';
+
+// Dummy data for products
+const dummyProducts: Product[] = [
+  {
+    id: 1,
+    name: 'Wireless Headphones',
+    price: 199.99,
+    rating: 4.8,
+    reviews: 1234,
+    image: 'https://images.pexels.com/photos/3945667/pexels-photo-3945667.jpeg',
+    description: 'High-quality wireless headphones with noise cancellation.',
+    category: 'Electronics',
+  },
+  {
+    id: 2,
+    name: 'Smart Watch Pro',
+    price: 299.99,
+    rating: 4.7,
+    reviews: 856,
+    image: 'https://images.pexels.com/photos/437037/pexels-photo-437037.jpeg',
+    description: 'Advanced smartwatch with health monitoring features.',
+    category: 'Electronics',
+  },
+  {
+    id: 3,
+    name: 'Fitness Tracker',
+    price: 79.99,
+    rating: 4.6,
+    reviews: 2345,
+    image: 'https://images.pexels.com/photos/393047/pexels-photo-393047.jpeg',
+    description: 'Track your fitness goals with this advanced fitness tracker.',
+    category: 'Electronics',
+  },
+  {
+    id: 4,
+    name: 'Wireless Earbuds',
+    price: 129.99,
+    rating: 4.9,
+    reviews: 1890,
+    image: 'https://images.pexels.com/photos/3780681/pexels-photo-3780681.jpeg',
+    description: 'Premium wireless earbuds with active noise cancellation.',
+    category: 'Electronics',
+  },
+  {
+    id: 5,
+    name: 'Smart LED TV',
+    price: 599.99,
+    rating: 4.7,
+    reviews: 567,
+    image: 'https://images.pexels.com/photos/6976094/pexels-photo-6976094.jpeg',
+    description: '4K Smart LED TV with built-in streaming apps.',
+    category: 'Electronics',
+  },
+  {
+    id: 6,
+    name: 'Robot Vacuum',
+    price: 299.99,
+    rating: 4.5,
+    reviews: 890,
+    image: 'https://images.pexels.com/photos/4087396/pexels-photo-4087396.jpeg',
+    description: 'Smart robot vacuum with app control and mapping.',
+    category: 'Electronics',
+  },
+  {
+    id: 7,
+    name: 'Coffee Maker',
+    price: 89.99,
+    rating: 4.4,
+    reviews: 1234,
+    image: 'https://images.pexels.com/photos/6803503/pexels-photo-6803503.jpeg',
+    description: 'Programmable coffee maker with thermal carafe.',
+    category: 'Home',
+  },
+  {
+    id: 8,
+    name: 'Air Fryer',
+    price: 69.99,
+    rating: 4.6,
+    reviews: 2345,
+    image: 'https://images.pexels.com/photos/6996101/pexels-photo-6996101.jpeg',
+    description: 'Digital air fryer with multiple cooking functions.',
+    category: 'Home',
+  }
 ];
 
 // Categories
@@ -28,47 +98,70 @@ const categories = [
   { id: 'accessories', name: 'Accessories', icon: '👜' },
 ];
 
-// Get all products with delay to simulate network request
-export const getProducts = () => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(products);
-    }, 500);
-  });
+// Simulate API delay
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Get all products
+export const getProducts = async (): Promise<Product[]> => {
+  await delay(1000);
+  return dummyProducts;
 };
 
 // Get product by ID
-export const getProductById = (id: any) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const product = products.find(p => p.id.toString() === id.toString());
-      resolve(product || null);
-    }, 300);
-  });
+export const getProductById = async (id: number): Promise<Product | undefined> => {
+  await delay(500);
+  return dummyProducts.find(product => product.id === id);
 };
 
 // Get products by category
-export const getProductsByCategory = (category: string) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const filteredProducts = products.filter(
-        p => category === 'all' || p.category === category
-      );
-      resolve(filteredProducts);
-    }, 500);
-  });
+export const getProductsByCategory = async (category: string): Promise<Product[]> => {
+  await delay(800);
+  return dummyProducts.filter(product => product.category === category);
 };
 
-// Get related products based on category
-export const getRelatedProducts = (category: string) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const relatedProducts = products
-        .filter(p => p.category === category)
-        .slice(0, 4);
-      resolve(relatedProducts);
-    }, 300);
-  });
+// Search products
+export const searchProducts = async (query: string): Promise<Product[]> => {
+  await delay(600);
+  return dummyProducts.filter(product => 
+    product.name.toLowerCase().includes(query.toLowerCase()) ||
+    product.description?.toLowerCase().includes(query.toLowerCase())
+  );
+};
+
+// Get trending products
+export const getTrendingProducts = async (): Promise<Product[]> => {
+  await delay(800);
+  return dummyProducts.sort((a, b) => b.reviews - a.reviews).slice(0, 4);
+};
+
+// Get best sellers
+export const getBestSellers = async (): Promise<Product[]> => {
+  await delay(800);
+  return dummyProducts.sort((a, b) => b.rating - a.rating).slice(0, 4);
+};
+
+// Get new arrivals
+export const getNewArrivals = async (): Promise<Product[]> => {
+  await delay(800);
+  return dummyProducts.slice(-4);
+};
+
+// Get daily deals
+export const getDailyDeals = async (): Promise<Product[]> => {
+  await delay(800);
+  return dummyProducts
+    .map(product => ({
+      ...product,
+      oldPrice: product.price * 1.2,
+      timeLeft: '08:45:30'
+    }))
+    .slice(0, 3);
+};
+
+// Get recommendations
+export const getRecommendations = async (): Promise<Product[]> => {
+  await delay(800);
+  return dummyProducts.sort(() => Math.random() - 0.5).slice(0, 4);
 };
 
 // Get all categories
