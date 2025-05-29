@@ -1,4 +1,5 @@
 import { useShop } from '@/src/context/ShopContext';
+import { useRouter } from 'expo-router';
 import { Minus, Plus, Trash2 } from 'lucide-react-native';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -6,6 +7,7 @@ import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'rea
 
 const CartScreen = () => {
   const { t } = useTranslation();
+  const router = useRouter();
   const { cart, removeFromCart, updateCartItemQuantity } = useShop();
 
   const total = cart.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0);
@@ -18,6 +20,10 @@ const CartScreen = () => {
     }
   };
 
+  const handleProductPress = (productId: number) => {
+    router.push(`/product/${productId}`);
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -27,7 +33,11 @@ const CartScreen = () => {
 
       <ScrollView style={styles.content}>
         {cart.map((item, index) => (
-          <View key={`cart-item-${item.id}-${index}`} style={styles.cartItem}>
+          <TouchableOpacity 
+            key={`cart-item-${item.id}-${index}`} 
+            style={styles.cartItem}
+            onPress={() => handleProductPress(item.id)}
+          >
             <Image source={{ uri: item.image }} style={styles.itemImage} />
             <View style={styles.itemDetails}>
               <Text style={styles.itemName}>{item.name}</Text>
@@ -35,14 +45,20 @@ const CartScreen = () => {
               <View style={styles.quantityContainer}>
                 <TouchableOpacity 
                   style={styles.quantityButton}
-                  onPress={() => handleQuantityChange(item.id, -1)}
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    handleQuantityChange(item.id, -1);
+                  }}
                 >
                   <Minus size={16} color="#666" />
                 </TouchableOpacity>
                 <Text style={styles.quantity}>{item.quantity || 1}</Text>
                 <TouchableOpacity 
                   style={styles.quantityButton}
-                  onPress={() => handleQuantityChange(item.id, 1)}
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    handleQuantityChange(item.id, 1);
+                  }}
                 >
                   <Plus size={16} color="#666" />
                 </TouchableOpacity>
@@ -50,11 +66,14 @@ const CartScreen = () => {
             </View>
             <TouchableOpacity 
               style={styles.removeButton}
-              onPress={() => removeFromCart(item.id)}
+              onPress={(e) => {
+                e.stopPropagation();
+                removeFromCart(item.id);
+              }}
             >
               <Trash2 size={20} color="#ff3b30" />
             </TouchableOpacity>
-          </View>
+          </TouchableOpacity>
         ))}
       </ScrollView>
 
