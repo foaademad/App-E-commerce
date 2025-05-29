@@ -1,11 +1,13 @@
-import React from 'react';
-import { Tabs } from "expo-router";
 import { Ionicons } from '@expo/vector-icons';
-import { useLanguage } from "../../src/context/LanguageContext";
+import { Tabs } from "expo-router";
+import React from 'react';
 import { StyleSheet } from 'react-native';
+import { useLanguage } from "../../src/context/LanguageContext";
+import { useShop } from "../../src/context/ShopContext";
 
 export default function TabLayout() {
   const { language } = useLanguage();
+  const { cart, wishlist} = useShop();
 
   // تعريف التبويبات في مصفوفة
   const tabScreens = [
@@ -23,12 +25,13 @@ export default function TabLayout() {
       name: 'whishList',
       title: { ar: 'المفضلة', en: 'WhishList' },
       icon: 'heart-outline',
+      badge: wishlist.length > 0 ? wishlist.length : undefined,
     },
     {
       name: 'cart',
       title: { ar: 'السلة', en: 'Cart' },
       icon: 'cart-outline',
-      badge: 2,
+      badge: cart.length > 0 ? cart.length : undefined,
     },
     {
       name: 'profile',
@@ -50,13 +53,13 @@ export default function TabLayout() {
         tabBarLabelStyle: {
           textAlign: language === 'ar' ? 'right' : 'left',
           writingDirection: language === 'ar' ? 'rtl' : 'ltr',
-          fontFamily: language === 'ar' ? 'Tajawal' : 'Roboto-Regular', // تأكد من إضافة خط عربي
+          fontFamily: language === 'ar' ? 'Tajawal' : 'Roboto-Regular',
         },
       }}
     >
-      {orderedTabs.map((tab) => (
+      {orderedTabs.map((tab, index) => (
         <Tabs.Screen
-          key={tab.name}
+          key={`tab-${index}`}
           name={tab.name}
           options={{
             title: language === 'ar' ? tab.title.ar : tab.title.en,
@@ -73,12 +76,8 @@ export default function TabLayout() {
 
 const styles = StyleSheet.create({
   tabBar: {
-   
-  
     height: 60,
     paddingBottom: 5,
     paddingTop: 5,
-
-
   },
 });

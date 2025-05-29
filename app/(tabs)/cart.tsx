@@ -6,9 +6,17 @@ import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'rea
 
 const CartScreen = () => {
   const { t } = useTranslation();
-  const { cart, removeFromCart } = useShop();
+  const { cart, removeFromCart, updateCartItemQuantity } = useShop();
 
-  const total = cart.reduce((sum, item) => sum + item.price, 0);
+  const total = cart.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0);
+
+  const handleQuantityChange = (itemId: number, change: number) => {
+    const item = cart.find(i => i.id === itemId);
+    if (item) {
+      const newQuantity = Math.max(1, (item.quantity || 1) + change);
+      updateCartItemQuantity(itemId, newQuantity);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -18,18 +26,24 @@ const CartScreen = () => {
       </View>
 
       <ScrollView style={styles.content}>
-        {cart.map((item) => (
-          <View key={item.id} style={styles.cartItem}>
+        {cart.map((item, index) => (
+          <View key={`cart-item-${item.id}-${index}`} style={styles.cartItem}>
             <Image source={{ uri: item.image }} style={styles.itemImage} />
             <View style={styles.itemDetails}>
               <Text style={styles.itemName}>{item.name}</Text>
-              <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
+              <Text style={styles.itemPrice}>${(item.price * (item.quantity || 1)).toFixed(2)}</Text>
               <View style={styles.quantityContainer}>
-                <TouchableOpacity style={styles.quantityButton}>
+                <TouchableOpacity 
+                  style={styles.quantityButton}
+                  onPress={() => handleQuantityChange(item.id, -1)}
+                >
                   <Minus size={16} color="#666" />
                 </TouchableOpacity>
-                <Text style={styles.quantity}>1</Text>
-                <TouchableOpacity style={styles.quantityButton}>
+                <Text style={styles.quantity}>{item.quantity || 1}</Text>
+                <TouchableOpacity 
+                  style={styles.quantityButton}
+                  onPress={() => handleQuantityChange(item.id, 1)}
+                >
                   <Plus size={16} color="#666" />
                 </TouchableOpacity>
               </View>

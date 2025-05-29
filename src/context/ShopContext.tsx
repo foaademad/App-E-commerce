@@ -9,6 +9,7 @@ interface Product {
   reviews: number;
   description?: string;
   category?: string;
+  quantity: number;
 }
 
 interface ShopContextType {
@@ -21,6 +22,7 @@ interface ShopContextType {
   addToWishlist: (product: Product) => void;
   removeFromWishlist: (productId: number) => void;
   isInWishlist: (productId: number) => boolean;
+  updateCartItemQuantity: (productId: number, quantity: number) => void;
 }
 
 const ShopContext = createContext<ShopContextType | undefined>(undefined);
@@ -33,11 +35,17 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const wishlistCount = wishlist.length;
 
   const addToCart = (product: Product) => {
-    setCart(prev => [...prev, product]);
+    setCart(prev => [...prev, { ...product, quantity: 1 }]);
   };
 
   const removeFromCart = (productId: number) => {
     setCart(prev => prev.filter(item => item.id !== productId));
+  };
+
+  const updateCartItemQuantity = (productId: number, quantity: number) => {
+    setCart(prev => prev.map(item => 
+      item.id === productId ? { ...item, quantity } : item
+    ));
   };
 
   const addToWishlist = (product: Product) => {
@@ -64,6 +72,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         addToWishlist,
         removeFromWishlist,
         isInWishlist,
+        updateCartItemQuantity,
       }}
     >
       {children}

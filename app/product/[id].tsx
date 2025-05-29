@@ -72,7 +72,7 @@ export default function ProductDetailScreen() {
 
   const handleAddToCart = () => {
     if (product) {
-      addToCart(product);
+      addToCart({ ...product, quantity });
     }
   };
 
@@ -81,7 +81,7 @@ export default function ProductDetailScreen() {
       if (isInWishlist(product.id)) {
         removeFromWishlist(product.id);
       } else {
-        addToWishlist(product);
+        addToWishlist({ ...product, quantity });
       }
     }
   };
