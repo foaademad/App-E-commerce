@@ -82,7 +82,7 @@ export default function ProductDetailScreen() {
 
   const handleAddToCart = () => {
     if (product) {
-      addToCart({ ...product, quantity });
+      addToCart({ ...product, quantity }, quantity);
     }
   };
 

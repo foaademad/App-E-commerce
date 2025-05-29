@@ -61,10 +61,10 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCart(prev => {
       const existingItem = prev.find(item => item.id === product.id);
       if (existingItem) {
-        // If item exists, increase its quantity
+        // If item exists, update its quantity
         return prev.map(item =>
           item.id === product.id
-            ? { ...item, quantity: (item.quantity || 1) + (quantity || 1) }
+            ? { ...item, quantity: quantity || 1 }
             : item
         );
       }
@@ -104,17 +104,6 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const clearCart = () => {
-    if (cart.length > 0) {
-      // Add current cart to order history before clearing
-      const newOrder: Order = {
-        id: Date.now().toString(),
-        date: new Date().toISOString(),
-        items: [...cart],
-        total: cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
-        status: 'Processing'
-      };
-      setOrderHistory(prev => [...prev, newOrder]);
-    }
     setCart([]);
   };
 

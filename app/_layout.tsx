@@ -6,6 +6,7 @@ import 'react-native-reanimated';
 import { LanguageProvider } from '../src/context/LanguageContext';
 // Import i18n configuration
 import { ShopProvider } from '@/src/context/ShopContext';
+import Toast from 'react-native-toast-message';
 import '../src/config/i18n';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -36,6 +37,7 @@ export default function RootLayout() {
                     <Stack.Screen name="signup" options={{ presentation: 'modal' }} />
                 </Stack>
             </LanguageProvider>
+            <Toast />
         </ShopProvider>
     );
 }

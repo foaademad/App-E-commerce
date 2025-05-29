@@ -2,7 +2,8 @@ import { useRouter } from 'expo-router';
 import { ArrowLeft, CreditCard, MapPin, Package } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 import type { Order } from '../src/context/ShopContext';
 import { useShop } from '../src/context/ShopContext';
 
@@ -36,12 +37,22 @@ export default function CheckoutScreen() {
       // 1. Validate inputs
       if (!shippingInfo.fullName || !shippingInfo.address || !shippingInfo.city || 
           !shippingInfo.state || !shippingInfo.zipCode || !shippingInfo.phone) {
-        Alert.alert(t('Error'), t('Please fill in all shipping information'));
+        Toast.show({
+          type: 'error',
+          text1: t('Error'),
+          text2: t('Please fill in all shipping information'),
+          position: 'top',
+        });
         return;
       }
 
       if (paymentMethod === 'credit' && (!cardInfo.cardNumber || !cardInfo.expiryDate || !cardInfo.cvv)) {
-        Alert.alert(t('Error'), t('Please fill in all card details'));
+        Toast.show({
+          type: 'error',
+          text1: t('Error'),
+          text2: t('Please fill in all card details'),
+          position: 'top',
+        });
         return;
       }
 
@@ -82,24 +93,23 @@ export default function CheckoutScreen() {
       clearCart();
 
       // 7. Show success message
-      Alert.alert(
-        t('Success'),
-        t('Your order has been placed successfully!'),
-        [
-          {
-            text: t('View Order'),
-            onPress: () => {
-              router.replace('/orders');
-            }
-          }
-        ]
-      );
+      Toast.show({
+        type: 'success',
+        text1: t('Success'),
+        text2: t('Your order has been placed successfully!'),
+        position: 'top',
+        onPress: () => {
+        },
+      });
+      router.replace('/orders' as any);
 
     } catch (error) {
-      Alert.alert(
-        t('Error'),
-        t('There was a problem processing your order. Please try again.')
-      );
+      Toast.show({
+        type: 'error',
+        text1: t('Error'),
+        text2: t('There was a problem processing your order. Please try again.'),
+        position: 'top',
+      });
     } finally {
       setIsLoading(false);
     }
@@ -261,8 +271,16 @@ export default function CheckoutScreen() {
 
       {/* Place Order Button */}
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.placeOrderButton} onPress={handlePlaceOrder}>
-          <Text style={styles.placeOrderText}>{t('Place Order')}</Text>
+        <TouchableOpacity 
+          style={[styles.placeOrderButton, isLoading && styles.placeOrderButtonDisabled]} 
+          onPress={handlePlaceOrder}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.placeOrderText}>{t('Place Order')}</Text>
+          )}
         </TouchableOpacity>
       </View>
     </View>
@@ -428,5 +446,8 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  placeOrderButtonDisabled: {
+    opacity: 0.7,
   },
 }); 

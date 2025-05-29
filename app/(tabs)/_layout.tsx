@@ -37,7 +37,7 @@ export default function TabLayout() {
       name: 'profile',
       title: { ar: 'الملف الشخصي', en: 'Profile' },
       icon: 'person-outline',
-    },
+    }
   ];
 
   // إعادة ترتيب التبويبات إذا كانت اللغة عربية
