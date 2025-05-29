@@ -49,7 +49,7 @@ const TabContent: React.FC<TabContentProps> = ({ activeTab, product }) => {
 export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
-  const { addToCart, addToWishlist, isInWishlist, removeFromWishlist } = useShop();
+  const { addToCart, addToWishlist, isInWishlist, removeFromWishlist, cart } = useShop();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
@@ -58,6 +58,16 @@ export default function ProductDetailScreen() {
   useEffect(() => {
     loadProduct();
   }, [id]);
+
+  useEffect(() => {
+    // Update quantity if product is already in cart
+    if (product) {
+      const cartItem = cart.find(item => item.id === product.id);
+      if (cartItem) {
+        setQuantity(cartItem.quantity);
+      }
+    }
+  }, [product, cart]);
 
   const loadProduct = async () => {
     try {
@@ -86,6 +96,10 @@ export default function ProductDetailScreen() {
     }
   };
 
+  const handleQuantityChange = (change: number) => {
+    setQuantity(prev => Math.max(1, prev + change));
+  };
+
   if (loading) {
     return (
       <View style={styles.container}>
@@ -101,6 +115,9 @@ export default function ProductDetailScreen() {
       </View>
     );
   }
+
+  const cartItem = cart.find(item => item.id === product.id);
+  const buttonText = cartItem ? 'Update Cart' : 'Add to Cart';
 
   return (
     <View style={styles.container}>
@@ -140,14 +157,14 @@ export default function ProductDetailScreen() {
             <View style={styles.quantityControls}>
               <TouchableOpacity 
                 style={styles.quantityButton}
-                onPress={() => setQuantity(Math.max(1, quantity - 1))}
+                onPress={() => handleQuantityChange(-1)}
               >
                 <Text style={styles.quantityButtonText}>-</Text>
               </TouchableOpacity>
               <Text style={styles.quantity}>{quantity}</Text>
               <TouchableOpacity 
                 style={styles.quantityButton}
-                onPress={() => setQuantity(quantity + 1)}
+                onPress={() => handleQuantityChange(1)}
               >
                 <Text style={styles.quantityButtonText}>+</Text>
               </TouchableOpacity>
@@ -193,7 +210,7 @@ export default function ProductDetailScreen() {
       <View style={styles.footer}>
         <TouchableOpacity style={styles.addToCartButton} onPress={handleAddToCart}>
           <ShoppingCart size={20} color="#fff" style={styles.cartIcon} />
-          <Text style={styles.addToCartText}>Add to Cart</Text>
+          <Text style={styles.addToCartText}>{buttonText}</Text>
         </TouchableOpacity>
       </View>
     </View>

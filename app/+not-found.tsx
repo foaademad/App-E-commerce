@@ -60,7 +60,7 @@ export default function NotFoundScreen() {
               transform: [{ translateY: iconTranslateY }],
             }
           ]}>
-            <Ionicons name="alert-circle-outline" size={120} color="#FF6B6B" />
+            <Ionicons name="alert-circle-outline" size={120} color="rgb(54, 199, 246)" />
           </Animated.View>
           
           <Animated.View style={[styles.textContainer, { opacity: fadeAnim }]}>
@@ -70,7 +70,7 @@ export default function NotFoundScreen() {
             <TouchableOpacity style={styles.button}>
               <Link href="/" style={styles.link}>
                 <View style={styles.buttonContent}>
-                  <Ionicons name="home-outline" size={20} color="#FFFFFF" />
+                  <Ionicons name="home-outline" size={20} color="#FFFFFF"  />
                   <Text style={styles.buttonText}>Return Home</Text>
                 </View>
               </Link>
@@ -122,10 +122,10 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   button: {
-    backgroundColor: '#007AFF',
+    backgroundColor: 'rgb(54, 199, 246)',
     borderRadius: 16,
     overflow: 'hidden',
-    shadowColor: '#007AFF',
+      shadowColor: 'rgb(54, 199, 246)',
     shadowOffset: {
       width: 0,
       height: 4,
@@ -161,14 +161,14 @@ const styles = StyleSheet.create({
     opacity: 0.1,
   },
   decoration1: {
-    backgroundColor: '#007AFF',
+    backgroundColor: 'rgb(54, 199, 246)',
     width: 200,
     height: 200,
     top: '10%',
     left: '5%',
   },
   decoration2: {
-    backgroundColor: '#FF6B6B',
+    backgroundColor: 'rgb(54, 199, 246)',
     width: 150,
     height: 150,
     bottom: '15%',

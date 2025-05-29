@@ -16,12 +16,18 @@ const CartScreen = () => {
     const item = cart.find(i => i.id === itemId);
     if (item) {
       const newQuantity = Math.max(1, (item.quantity || 1) + change);
-      updateCartItemQuantity(itemId, newQuantity);
+      updateCartItemQuantity(itemId.toString(), newQuantity);
     }
   };
 
   const handleProductPress = (productId: number) => {
     router.push(`/product/${productId}`);
+  };
+
+  const handleCheckout = () => {
+    if (cart.length > 0) {
+      router.push('/checkout');
+    }
   };
 
   return (
@@ -68,7 +74,7 @@ const CartScreen = () => {
               style={styles.removeButton}
               onPress={(e) => {
                 e.stopPropagation();
-                removeFromCart(item.id);
+                removeFromCart(item.id.toString());
               }}
             >
               <Trash2 size={20} color="#ff3b30" />
@@ -82,7 +88,11 @@ const CartScreen = () => {
           <Text style={styles.totalLabel}>{t('Total')}</Text>
           <Text style={styles.totalAmount}>${total.toFixed(2)}</Text>
         </View>
-        <TouchableOpacity style={styles.checkoutButton}>
+        <TouchableOpacity 
+          style={[styles.checkoutButton, cart.length === 0 && styles.disabledButton]} 
+          onPress={handleCheckout}
+          disabled={cart.length === 0}
+        >
           <Text style={styles.checkoutButtonText}>{t('Proceed to Checkout')}</Text>
         </TouchableOpacity>
       </View>
@@ -203,5 +213,8 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  disabledButton: {
+    backgroundColor: '#ccc',
   },
 });
