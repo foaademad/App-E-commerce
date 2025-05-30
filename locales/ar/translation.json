@@ -91,21 +91,177 @@
       "signup_success": "تم إنشاء حسابك بنجاح"
     },
   "profile": {
-    "edit_profile": "تعديل الملف الشخصي",
+    "edit_profile": {
+      "title": "تعديل الملف الشخصي",
+      "personal_info": "المعلومات الشخصية",
+      "name": "الاسم الكامل",
+      "email": "البريد الإلكتروني",
+      "phone": "رقم الهاتف",
+      "save_changes": "حفظ التغييرات",
+      "change_photo": "تغيير الصورة",
+      "remove_photo": "حذف الصورة"
+    },
+    "orders": {
+      "title": "طلباتي",
+      "active": "الطلبات النشطة",
+      "completed": "الطلبات المكتملة",
+      "cancelled": "الطلبات الملغاة",
+      "order_number": "رقم الطلب #",
+      "date": "التاريخ",
+      "status": "الحالة",
+      "total": "المجموع",
+      "track_order": "تتبع الطلب",
+      "view_details": "عرض التفاصيل",
+      "cancel_order": "إلغاء الطلب",
+      "no_orders": "لا توجد طلبات",
+      "items": "منتجات",
+      "order_details": "تفاصيل الطلب",
+      "order_status": {
+        "active": "نشط",
+        "completed": "مكتمل",
+        "cancelled": "ملغي",
+        "processing": "قيد المعالجة",
+        "shipped": "تم الشحن",
+        "delivered": "تم التوصيل"
+      },
+      "filter": {
+        "title": "تصفية الطلبات",
+        "date_range": "النطاق الزمني",
+        "status": "الحالة",
+        "apply": "تطبيق التصفية",
+        "clear": "مسح التصفية"
+      },
+      "search": {
+        "placeholder": "البحث في الطلبات...",
+        "no_results": "لا توجد طلبات"
+      }
+    },
+    "wishlist": {
+      "title": "المفضلة",
+      "empty": "قائمة المفضلة فارغة",
+      "add_to_cart": "إضافة إلى السلة",
+      "remove": "إزالة",
+      "price": "السعر",
+      "in_stock": "متوفر",
+      "out_of_stock": "غير متوفر"
+    },
+    "addresses": {
+      "title": "عناوين الشحن",
+      "add_new": "إضافة عنوان جديد",
+      "edit": "تعديل العنوان",
+      "delete": "حذف العنوان",
+      "set_default": "تعيين كافتراضي",
+      "default": "افتراضي",
+      "name": "الاسم الكامل",
+      "phone": "رقم الهاتف",
+      "address": "العنوان",
+      "city": "المدينة",
+      "state": "المنطقة",
+      "country": "الدولة",
+      "postal_code": "الرمز البريدي",
+      "save": "حفظ العنوان",
+      "no_addresses": "لا توجد عناوين",
+      "fill_all_fields": "يرجى ملء جميع الحقول",
+      "add_success": "تمت إضافة العنوان بنجاح",
+      "edit_success": "تم تحديث العنوان بنجاح",
+      "delete_success": "تم حذف العنوان بنجاح",
+      "set_default_success": "تم تحديث العنوان الافتراضي بنجاح"
+    },
+    "payment_methods": {
+      "title": "طرق الدفع",
+      "add_new": "إضافة بطاقة جديدة",
+      "edit": "تعديل البطاقة",
+      "delete": "حذف البطاقة",
+      "delete_confirm": "هل أنت متأكد من حذف هذه البطاقة؟",
+      "set_default": "تعيين كافتراضي",
+      "default": "افتراضي",
+      "card_number": "رقم البطاقة",
+      "expiry_date": "تاريخ الانتهاء",
+      "cvv": "رمز الأمان",
+      "card_holder": "اسم حامل البطاقة",
+      "save": "حفظ البطاقة",
+      "no_cards": "لا توجد بطاقات",
+      "delete_success": "تم حذف البطاقة بنجاح",
+      "set_default_success": "تم تحديث البطاقة الافتراضية بنجاح"
+    },
+    "order_history": {
+      "title": "سجل الطلبات",
+      "filter": "تصفية الطلبات",
+      "search": "البحث في الطلبات",
+      "date_range": "النطاق الزمني",
+      "status": "الحالة",
+      "apply": "تطبيق التصفية",
+      "clear": "مسح التصفية",
+      "no_orders": "لا توجد طلبات"
+    },
+    "notifications": {
+      "title": "الإشعارات",
+      "settings": "إعدادات الإشعارات",
+      "push": "إشعارات الدفع",
+      "email": "إشعارات البريد الإلكتروني",
+      "sms": "إشعارات الرسائل القصيرة",
+      "orders": "تحديثات الطلبات",
+      "promotions": "العروض والخصومات",
+      "newsletter": "النشرة الإخبارية",
+      "save": "حفظ الإعدادات"
+    },
+    "privacy_security": {
+      "title": "الخصوصية والأمان",
+      "change_password": "تغيير كلمة المرور",
+      "current_password": "كلمة المرور الحالية",
+      "new_password": "كلمة المرور الجديدة",
+      "confirm_password": "تأكيد كلمة المرور",
+      "two_factor": "المصادقة الثنائية",
+      "enable": "تفعيل",
+      "disable": "تعطيل",
+      "save": "حفظ التغييرات",
+      "privacy_settings": "إعدادات الخصوصية",
+      "data_sharing": "مشاركة البيانات",
+      "location": "خدمات الموقع",
+      "cookies": "إعدادات ملفات تعريف الارتباط"
+    },
+    "help_support": {
+      "title": "المساعدة والدعم",
+      "faq": "الأسئلة الشائعة",
+      "contact": "اتصل بنا",
+      "email": "الدعم عبر البريد الإلكتروني",
+      "phone": "الدعم الهاتفي",
+      "chat": "المحادثة المباشرة",
+      "submit_ticket": "تقديم تذكرة",
+      "subject": "الموضوع",
+      "message": "الرسالة",
+      "send": "إرسال الرسالة"
+    },
+    "settings": {
+      "title": "الإعدادات",
+      "language": "اللغة",
+      "theme": "المظهر",
+      "dark_mode": "الوضع الداكن",
+      "currency": "العملة",
+      "measurement": "وحدات القياس",
+      "notifications": "الإشعارات",
+      "privacy": "الخصوصية",
+      "about": "حول",
+      "version": "الإصدار",
+      "terms": "الشروط والأحكام",
+      "privacy_policy": "سياسة الخصوصية"
+    },
+    
     "my_account": "حسابي",
     "my_orders": "طلباتي",
-    "wishlist": "المفضلة",
     "shipping_addresses": "عناوين الشحن",
-    "payment_methods": "طرق الدفع",
-    "order_history": "سجل الطلبات",
-    "settings": "الإعدادات",
-    "notifications": "الإشعارات",
-    "privacy_security": "الخصوصية والأمان",
-    "help_support": "المساعدة والدعم",
+   
     "logout": "تسجيل الخروج",
-    "orders": "الطلبات",
-    "addresses": "العناوين",
+   
+    
     "cards": "البطاقات",
     "change_language": "تغيير اللغة"
-  }
+  },
+  "permission_required": "الإذن مطلوب",
+  "gallery_permission_message": "يرجى السماح بالوصول إلى مكتبة الصور لتغيير صورة الملف الشخصي",
+  "error": "خطأ",
+  "image_picker_error": "فشل في اختيار الصورة. يرجى المحاولة مرة أخرى.",
+  "cancel": "إلغاء",
+  "delete": "حذف",
+  "success": "تم بنجاح"
 }

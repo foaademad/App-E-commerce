@@ -38,52 +38,52 @@ const ProfileScreen = () => {
 
   const menuItems = [
     {
-      title: t('profile.my_orders'),
-      icon: <Package size={24} color="#2196F3" />,
+      title: t('profile.orders.title'),
+      icon: <Package size={24} color="#36c7f6" />,
       onPress: () => router.push('/orders' as any),
       badge: orderHistory.length.toString(),
     },
     {
-      title: t('profile.wishlist'),
-      icon: <Heart size={24} color="#2196F3" />,
+      title: t('profile.wishlist.title'),
+      icon: <Heart size={24} color="#36c7f6" />,
       onPress: () => router.push('/whishList' as any),
       badge: wishlistCount.toString(),
     },
     {
-      title: t('profile.shipping_addresses'),
-      icon: <MapPin size={24} color="#2196F3" />,
+      title: t('profile.addresses.title'),
+      icon: <MapPin size={24} color="#36c7f6" />,
       onPress: () => router.push('/addresses' as any),
     },
     {
-      title: t('profile.payment_methods'),
-      icon: <CreditCard size={24} color="#2196F3" />,
+      title: t('profile.cards'),
+      icon: <CreditCard size={24} color="#36c7f6" />,
       onPress: () => router.push('/payment-methods' as any),
     },
     {
-      title: t('profile.order_history'),
-      icon: <History size={24} color="#2196F3" />,
+      title: t('profile.order_history.title'),
+      icon: <History size={24} color="#36c7f6" />,
       onPress: () => router.push('/order-history' as any),
     },
   ];
 
   const settingsItems = [
     {
-      title: t('profile.notifications'),
+      title: t('profile.notifications.title'),
       icon: <Bell size={24} color="#666" />,
       onPress: () => router.push('/notifications' as any),
     },
     {
-      title: t('profile.privacy_security'),
+      title: t('profile.privacy_security.title'),
       icon: <Shield size={24} color="#666" />,
       onPress: () => router.push('/privacy' as any),
     },
     {
-      title: t('profile.help_support'),
+      title: t('profile.help_support.title'),
       icon: <HelpCircle size={24} color="#666" />,
       onPress: () => router.push('/support' as any),
     },
     {
-      title: t('profile.settings'),
+      title: t('profile.settings.title'),
       icon: <Settings size={24} color="#666" />,
       onPress: () => router.push('/settings' as any),
     },
@@ -95,7 +95,7 @@ const ProfileScreen = () => {
       <View style={[styles.header, { direction: isRTL ? 'rtl' : 'ltr' }]}>
         <View style={[styles.profileInfo, { direction: isRTL ? 'rtl' : 'ltr' }]}>
           <Image
-            source={{ uri: 'https://via.placeholder.com/100' }}
+            source={{ uri: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8dXNlcnxlbnwwfHwwfHx8MA%3D%3D' }}
             style={styles.profileImage}
           />
           <View style={[styles.userInfo, { marginLeft: isRTL ? 0 : 16, marginRight: isRTL ? 16 : 0 }]}>
@@ -108,13 +108,13 @@ const ProfileScreen = () => {
             style={styles.editProfileButton}
             onPress={() => router.push('/edit-profile' as any)}
           >
-            <Text style={styles.editProfileText}>{t('profile.edit_profile')}</Text>
+            <Text style={styles.editProfileText}>{t('profile.edit_profile.title')}</Text>
           </TouchableOpacity>
           <TouchableOpacity 
             style={styles.languageButton}
             onPress={toggleLanguage}
           >
-            <Globe size={20} color="#2196F3" />
+            <Globe size={20} color="#36c7f6" />
             <Text style={styles.languageText}>{t('profile.change_language')}</Text>
           </TouchableOpacity>
         </View>
@@ -124,12 +124,12 @@ const ProfileScreen = () => {
       <View style={[styles.statsContainer, { direction: isRTL ? 'rtl' : 'ltr' }]}>
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>12</Text>
-          <Text style={styles.statLabel}>{t('profile.orders')}</Text>
+          <Text style={styles.statLabel}>{t('profile.orders.title')}</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>3</Text>
-          <Text style={styles.statLabel}>{t('profile.addresses')}</Text>
+          <Text style={styles.statLabel}>{t('profile.addresses.title')}</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
@@ -165,7 +165,7 @@ const ProfileScreen = () => {
 
       {/* Settings Menu */}
       <View style={[styles.section, { direction: isRTL ? 'rtl' : 'ltr' }]}>
-        <Text style={styles.sectionTitle}>{t('profile.settings')}</Text>
+        <Text style={styles.sectionTitle}>{t('profile.settings.title')}</Text>
         {settingsItems.map((item, index) => (
           <TouchableOpacity
             key={index}
@@ -202,9 +202,10 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: '#fff',
     padding: 20,
+    
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
-    paddingTop: 30,
+    paddingTop: 45,
 
   },
   profileInfo: {
@@ -244,7 +245,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   editProfileText: {
-    color: '#2196F3',
+    color: '#36c7f6',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -259,7 +260,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   languageText: {
-    color: '#2196F3',
+    color: '#36c7f6',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -276,7 +277,7 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#2196F3',
+    color: '#36c7f6',
   },
   statLabel: {
     fontSize: 14,
@@ -319,7 +320,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   badge: {
-    backgroundColor: '#2196F3',
+    backgroundColor: '#36c7f6',
     borderRadius: 12,
     paddingHorizontal: 8,
     paddingVertical: 2,

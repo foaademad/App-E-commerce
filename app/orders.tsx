@@ -1,3 +1,4 @@
+import { useLanguage } from '@/src/context/LanguageContext';
 import { useShop } from '@/src/context/ShopContext';
 import { useRouter } from 'expo-router';
 import { ArrowLeft } from 'lucide-react-native';
@@ -7,23 +8,24 @@ import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'rea
 
 const OrdersScreen = () => {
   const { t } = useTranslation();
+  const { language } = useLanguage();
   const router = useRouter();
   const { orderHistory } = useShop();
-
+  const isRTL = language === 'ar';
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+        <View style={[styles.header, { flexDirection: isRTL ? 'row-reverse' : 'row' , alignItems: isRTL ? 'flex-end' : 'flex-start' }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <ArrowLeft size={24} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('My Orders')}</Text>
+        <Text style={styles.headerTitle}>{t('profile.orders.title')}</Text>
       </View>
 
       <ScrollView style={styles.content}>
         {orderHistory.length === 0 ? (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyStateText}>{t('No orders yet')}</Text>
+              <Text style={styles.emptyStateText}>{t('profile.orders.no_orders')}</Text>
           </View>
         ) : (
           orderHistory.map((order) => (
@@ -59,7 +61,7 @@ const OrdersScreen = () => {
               </View>
 
               <View style={styles.orderFooter}>
-                <Text style={styles.totalLabel}>{t('Total')}</Text>
+                <Text style={styles.totalLabel}>{t('profile.orders.total')}</Text>
                 <Text style={styles.totalAmount}>${order.total.toFixed(2)}</Text>
               </View>
             </View>
@@ -81,6 +83,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
+    paddingTop: 40,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
