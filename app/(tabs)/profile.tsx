@@ -1,9 +1,15 @@
+import { useLanguage } from '@/src/context/LanguageContext';
 import { useShop } from '@/src/context/ShopContext';
 import { useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
 import {
   ArrowRight,
   Bell,
   CreditCard,
+  Globe,
   Heart,
   HelpCircle,
   History,
@@ -13,40 +19,48 @@ import {
   Settings,
   Shield
 } from 'lucide-react-native';
-import React from 'react';
-import { useTranslation } from 'react-i18next';
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const ProfileScreen = () => {
+  const { language, changeLanguage } = useLanguage();
+  const [isRTL, setIsRTL] = useState(language === "ar");
+  
+  useEffect(() => {
+    setIsRTL(language === "ar");
+  }, [language]);
   const { t } = useTranslation();
   const router = useRouter();
   const { wishlistCount, orderHistory } = useShop();
 
+  const toggleLanguage = () => {
+    const newLanguage = language === 'en' ? 'ar' : 'en';
+    changeLanguage(newLanguage);
+  };
+
   const menuItems = [
     {
-      title: t('My Orders'),
+      title: t('profile.my_orders'),
       icon: <Package size={24} color="#2196F3" />,
       onPress: () => router.push('/orders' as any),
       badge: orderHistory.length.toString(),
     },
     {
-      title: t('Wishlist'),
+      title: t('profile.wishlist'),
       icon: <Heart size={24} color="#2196F3" />,
       onPress: () => router.push('/whishList' as any),
       badge: wishlistCount.toString(),
     },
     {
-      title: t('Shipping Addresses'),
+      title: t('profile.shipping_addresses'),
       icon: <MapPin size={24} color="#2196F3" />,
       onPress: () => router.push('/addresses' as any),
     },
     {
-      title: t('Payment Methods'),
+      title: t('profile.payment_methods'),
       icon: <CreditCard size={24} color="#2196F3" />,
       onPress: () => router.push('/payment-methods' as any),
     },
     {
-      title: t('Order History'),
+      title: t('profile.order_history'),
       icon: <History size={24} color="#2196F3" />,
       onPress: () => router.push('/order-history' as any),
     },
@@ -54,118 +68,126 @@ const ProfileScreen = () => {
 
   const settingsItems = [
     {
-      title: t('Notifications'),
+      title: t('profile.notifications'),
       icon: <Bell size={24} color="#666" />,
       onPress: () => router.push('/notifications' as any),
     },
     {
-      title: t('Privacy & Security'),
+      title: t('profile.privacy_security'),
       icon: <Shield size={24} color="#666" />,
       onPress: () => router.push('/privacy' as any),
     },
     {
-      title: t('Help & Support'),
+      title: t('profile.help_support'),
       icon: <HelpCircle size={24} color="#666" />,
       onPress: () => router.push('/support' as any),
     },
     {
-      title: t('Settings'),
+      title: t('profile.settings'),
       icon: <Settings size={24} color="#666" />,
       onPress: () => router.push('/settings' as any),
     },
   ];
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={[styles.container, { direction: isRTL ? 'rtl' : 'ltr' }]}>
       {/* Profile Header */}
-      <View style={styles.header}>
-        <View style={styles.profileInfo}>
+      <View style={[styles.header, { direction: isRTL ? 'rtl' : 'ltr' }]}>
+        <View style={[styles.profileInfo, { direction: isRTL ? 'rtl' : 'ltr' }]}>
           <Image
             source={{ uri: 'https://via.placeholder.com/100' }}
             style={styles.profileImage}
           />
-          <View style={styles.userInfo}>
+          <View style={[styles.userInfo, { marginLeft: isRTL ? 0 : 16, marginRight: isRTL ? 16 : 0 }]}>
             <Text style={styles.userName}>John Doe</Text>
             <Text style={styles.userEmail}>john.doe@example.com</Text>
           </View>
         </View>
-        <TouchableOpacity 
-          style={styles.editProfileButton}
-          onPress={() => router.push('/edit-profile' as any)}
-        >
-          <Text style={styles.editProfileText}>{t('Edit Profile')}</Text>
-        </TouchableOpacity>
+        <View style={styles.headerButtons}>
+          <TouchableOpacity 
+            style={styles.editProfileButton}
+            onPress={() => router.push('/edit-profile' as any)}
+          >
+            <Text style={styles.editProfileText}>{t('profile.edit_profile')}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.languageButton}
+            onPress={toggleLanguage}
+          >
+            <Globe size={20} color="#2196F3" />
+            <Text style={styles.languageText}>{t('profile.change_language')}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Quick Stats */}
-      <View style={styles.statsContainer}>
+      <View style={[styles.statsContainer, { direction: isRTL ? 'rtl' : 'ltr' }]}>
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>12</Text>
-          <Text style={styles.statLabel}>{t('Orders')}</Text>
+          <Text style={styles.statLabel}>{t('profile.orders')}</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>3</Text>
-          <Text style={styles.statLabel}>{t('Addresses')}</Text>
+          <Text style={styles.statLabel}>{t('profile.addresses')}</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>2</Text>
-          <Text style={styles.statLabel}>{t('Cards')}</Text>
+          <Text style={styles.statLabel}>{t('profile.cards')}</Text>
         </View>
       </View>
 
       {/* Main Menu */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{t('My Account')}</Text>
+      <View style={[styles.section, { direction: isRTL ? 'rtl' : 'ltr' }]}>
+        <Text style={styles.sectionTitle}>{t('profile.my_account')}</Text>
         {menuItems.map((item, index) => (
           <TouchableOpacity
             key={index}
-            style={styles.menuItem}
+            style={[styles.menuItem, { direction: isRTL ? 'rtl' : 'ltr' }]}
             onPress={item.onPress}
           >
-            <View style={styles.menuItemLeft}>
+            <View style={[styles.menuItemLeft, { direction: isRTL ? 'rtl' : 'ltr' }]}>
               {item.icon}
-              <Text style={styles.menuItemText}>{item.title}</Text>
+              <Text style={[styles.menuItemText, { marginLeft: isRTL ? 0 : 12, marginRight: isRTL ? 12 : 0 }]}>{item.title}</Text>
             </View>
-            <View style={styles.menuItemRight}>
+            <View style={[styles.menuItemRight, { direction: isRTL ? 'rtl' : 'ltr' }]}>
               {item.badge && (
                 <View style={styles.badge}>
                   <Text style={styles.badgeText}>{item.badge}</Text>
                 </View>
               )}
-              <ArrowRight size={20} color="#666" />
+              <ArrowRight size={20} color="#666" style={{ transform: [{ rotate: isRTL ? '180deg' : '0deg' }] }} />
             </View>
           </TouchableOpacity>
         ))}
       </View>
 
       {/* Settings Menu */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{t('Settings')}</Text>
+      <View style={[styles.section, { direction: isRTL ? 'rtl' : 'ltr' }]}>
+        <Text style={styles.sectionTitle}>{t('profile.settings')}</Text>
         {settingsItems.map((item, index) => (
           <TouchableOpacity
             key={index}
-            style={styles.menuItem}
+            style={[styles.menuItem, { direction: isRTL ? 'rtl' : 'ltr' }]}
             onPress={item.onPress}
           >
-            <View style={styles.menuItemLeft}>
+            <View style={[styles.menuItemLeft, { direction: isRTL ? 'rtl' : 'ltr' }]}>
               {item.icon}
-              <Text style={styles.menuItemText}>{item.title}</Text>
+              <Text style={[styles.menuItemText, { marginLeft: isRTL ? 0 : 12, marginRight: isRTL ? 12 : 0 }]}>{item.title}</Text>
             </View>
-            <ArrowRight size={20} color="#666" />
+            <ArrowRight size={20} color="#666" style={{ transform: [{ rotate: isRTL ? '180deg' : '0deg' }] }} />
           </TouchableOpacity>
         ))}
       </View>
 
       {/* Logout Button */}
-      <TouchableOpacity style={styles.logoutButton}>
+      <TouchableOpacity style={[styles.logoutButton, { direction: isRTL ? 'rtl' : 'ltr' }]}>
         <LogOut size={24} color="#ff3b30" />
-        <Text style={styles.logoutText}>{t('Logout')}</Text>
+        <Text style={styles.logoutText}>{t('profile.logout')}</Text>
       </TouchableOpacity>
 
-      {/* App Version */}
-      <Text style={styles.version}>Version 1.0.0</Text>
+    
     </ScrollView>
   );
 };
@@ -182,6 +204,8 @@ const styles = StyleSheet.create({
     padding: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
+    paddingTop: 30,
+
   },
   profileInfo: {
     flexDirection: 'row',
@@ -206,14 +230,35 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 4,
   },
-  editProfileButton: {
+  headerButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginTop: 16,
+    gap: 12,
+  },
+  editProfileButton: {
+    flex: 1,
     padding: 12,
     backgroundColor: '#f0f0f0',
     borderRadius: 8,
     alignItems: 'center',
   },
   editProfileText: {
+    color: '#2196F3',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  languageButton: {
+    flex: 1,
+    padding: 12,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 8,
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  languageText: {
     color: '#2196F3',
     fontSize: 16,
     fontWeight: '600',
@@ -272,7 +317,6 @@ const styles = StyleSheet.create({
   menuItemText: {
     fontSize: 16,
     color: '#333',
-    marginLeft: 12,
   },
   badge: {
     backgroundColor: '#2196F3',
@@ -291,8 +335,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#fff',
+    
     marginTop: 16,
-    padding: 16,
+    padding: 20,
     gap: 8,
   },
   logoutText: {

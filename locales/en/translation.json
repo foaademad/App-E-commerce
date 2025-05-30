@@ -75,7 +75,23 @@
     "terms_and_conditions": "I agree to the Terms and Conditions",
     "confirm_password_required": "Confirm password is required",
     "address_required": "Address is required"
-     
-
+  },
+  "profile": {
+    "edit_profile": "Edit Profile",
+    "my_account": "My Account",
+    "my_orders": "My Orders",
+    "wishlist": "Wishlist",
+    "shipping_addresses": "Shipping Addresses",
+    "payment_methods": "Payment Methods",
+    "order_history": "Order History",
+    "settings": "Settings",
+    "notifications": "Notifications",
+    "privacy_security": "Privacy & Security",
+    "help_support": "Help & Support",
+    "logout": "Logout",
+    "orders": "Orders",
+    "addresses": "Addresses",
+    "cards": "Cards",
+    "change_language": "Change Language"
   }
 }

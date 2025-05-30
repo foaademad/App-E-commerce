@@ -89,5 +89,23 @@
       "address_invalid": "العنوان يجب ان يحتوي على حروف، ارقام ومسافات فقط",
       "signup_button": "إنشاء حساب",
       "signup_success": "تم إنشاء حسابك بنجاح"
-    }
+    },
+  "profile": {
+    "edit_profile": "تعديل الملف الشخصي",
+    "my_account": "حسابي",
+    "my_orders": "طلباتي",
+    "wishlist": "المفضلة",
+    "shipping_addresses": "عناوين الشحن",
+    "payment_methods": "طرق الدفع",
+    "order_history": "سجل الطلبات",
+    "settings": "الإعدادات",
+    "notifications": "الإشعارات",
+    "privacy_security": "الخصوصية والأمان",
+    "help_support": "المساعدة والدعم",
+    "logout": "تسجيل الخروج",
+    "orders": "الطلبات",
+    "addresses": "العناوين",
+    "cards": "البطاقات",
+    "change_language": "تغيير اللغة"
   }
+}
