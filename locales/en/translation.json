@@ -85,7 +85,9 @@
     "error": "Error",
     "success": "Success",
     "select_company_type": "Select Company Type",
-    "store": "Store"
+    "store": "Store",
+    "next_step": "Next Step",
+    "back": "Back"
   },
   "profile": {
     "edit_profile": {

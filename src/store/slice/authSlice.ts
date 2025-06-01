@@ -14,6 +14,7 @@ interface AuthState {
   isLoading: boolean;
   isAuthenticated: boolean;
   error: string | null;
+  registerSuccess: boolean;
 }
 
 const initialState: AuthState = {
@@ -22,6 +23,7 @@ const initialState: AuthState = {
   isLoading: false,
   isAuthenticated: false,
   error: null,
+  registerSuccess: false,
 };
 
 // Async Thunks for login,register,logout, getToken
@@ -51,17 +53,45 @@ export const register = createAsyncThunk(
   "auth/register",
   async (
     credentials: {
-      email: string;
-      password: string;
-      name: string;
-      role: string;
+        Password: string;
+        ConfirmPassword: string;
+        IsCompanyOrShop: boolean;
+        CommercialRegister: File; // الحقل الذي يحتوي على الملف
+        CommercialRegisterName: string;
+        Location: string;
+        Email: string;
+        FullName: string;
+        PhoneNumber: string;
+        IsCompany: boolean;
+        IsMarketer: boolean;
+        CreatedAt: string;
     },
     { rejectWithValue }
   ) => {
     try {
+          // إنشاء FormData لجمع البيانات
+      const formData = new FormData();
+
+      // إضافة الحقول النصية
+      formData.append("Password", credentials.Password);
+      formData.append("ConfirmPassword", credentials.ConfirmPassword);
+      formData.append("IsCompanyOrShop", String(credentials.IsCompanyOrShop));
+      formData.append("Location", credentials.Location);
+      formData.append("Email", credentials.Email);
+      formData.append("FullName", credentials.FullName);
+      formData.append("PhoneNumber", credentials.PhoneNumber);
+      formData.append("IsCompany", String(credentials.IsCompany));
+      formData.append("IsMarketer", String(credentials.IsMarketer));
+      formData.append("CreatedAt", credentials.CreatedAt);
+      formData.append("CommercialRegister", credentials.CommercialRegister , credentials.CommercialRegisterName);
       const response = await axios.post(
         "http://localhost:5000/api/Account/register",
-        credentials
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
       );
       return response.data;
     } catch (error: any) {
@@ -131,6 +161,10 @@ const authSlice = createSlice({
       state.token = null;
       state.error = null;
     },
+    //to register the user
+    registerUser: (state) => {
+      state.registerSuccess = true;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -180,6 +214,29 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.isAuthenticated = false;
         state.error = action.payload as string;
+      })
+      //   =========================================================================
+      //to register the user
+
+    .addCase(register.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(register.fulfilled, (state, action) => {
+        state.isLoading = false;
+
+        if (action.payload.token && action.payload.user) {
+          state.token = action.payload.token;
+          state.user = action.payload.user;
+          state.isAuthenticated = true;
+        } else {
+          state.isAuthenticated = false;
+        }
+      })
+      .addCase(register.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+        state.isAuthenticated = false;
       });
   },
 });
@@ -191,6 +248,7 @@ export const {
   setIsLoading,
   setError,
   logoutUser,
+  registerUser,
 } = authSlice.actions;
 
 export default authSlice.reducer;

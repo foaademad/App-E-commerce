@@ -102,7 +102,9 @@
       "error": "خطأ",
       "success": "تم بنجاح",
       "select_company_type": "اختر نوع الشركة",
-      "store": "متجر"
+      "store": "متجر",
+      "next_step": "الخطوة التالية",
+      "back": "العودة"
     },
   "profile": {
     "edit_profile": {

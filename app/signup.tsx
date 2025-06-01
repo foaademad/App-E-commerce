@@ -8,14 +8,13 @@ import {
   Alert,
   Animated,
   Dimensions,
-  Image,
   Platform,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import * as Yup from "yup";
 import { useLanguage } from "../src/context/LanguageContext";
@@ -58,7 +57,11 @@ const CompanySchema = (t: any) =>
     ),
     Phone: Yup.string().required(t("signup.Phone_required")),
     companyType: Yup.string().required(t("signup.company_type_required")),
-    companyImage: Yup.string().required(t("signup.company_image_required")),
+    companyImage: Yup.string().when('companyType', {
+      is: 'company',
+      then: schema => schema.required(t("signup.company_image_required")),
+      otherwise: schema => schema.notRequired(),
+    }),
   });
 
 const SignupScreen = () => {
@@ -69,18 +72,21 @@ const SignupScreen = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [accountType, setAccountType] = useState("user"); // user, company
   const [userType, setUserType] = useState("regular"); // regular, marketer
+  const [step, setStep] = useState(1); // step=1 -> basic info, step=2 -> company details
+  const [businessType, setBusinessType] = useState("store"); // store or company
   const router = useRouter();
+  const [imageUri, setImageUri] = useState<string | null>(null);
+  const [imageName, setImageName] = useState<string | null>(null);
   const [balls] = useState(() => Array(5).fill(0).map(() => ({
     x: new Animated.Value(Math.random() * Dimensions.get('window').width),
     y: new Animated.Value(Math.random() * Dimensions.get('window').height),
     size: Math.random() * 50 + 50,
   })));
-  const [selectedCompanyType, setSelectedCompanyType] = useState("store");
-  const [imageUri, setImageUri] = useState<string | null>(null);
 
   useEffect(() => {
     setIsRTL(language === "ar");
   }, [language]);
+
   //to animate the balls
   useEffect(() => {
     const animateBalls = () => {
@@ -112,10 +118,8 @@ const SignupScreen = () => {
           ]),
         ]);
       });
-
       Animated.parallel(animations).start(() => animateBalls());
     };
-
     animateBalls();
   }, []);
 
@@ -162,31 +166,15 @@ const SignupScreen = () => {
     return accountType === "company" ? CompanySchema(t) : RegularUserSchema(t);
   };
 
- const handleSubmit = (values: any, { setSubmitting }: any) => {
-  // تحديد نوع الحساب بناءً على userType
-    if (accountType === "user") {
-      if (userType === "regular") {
-        values.accountType = "user";
-      } else if (userType === "marketer") {
-        values.accountType = "marketer";
-      } else {
-        values.accountType = "company";
-      }
-    }
-  const accountTypeValue = userType ;
-
-  // إنشاء كائن البيانات المرسلة مع إضافة accountType
-  const signupData = {
-    accountType: accountTypeValue, // إضافة accountType بناءً على userType
-    ...values,
+  const handleSubmit = (values: any, { setSubmitting }: any) => {
+    const signupData = {
+      accountType: userType,
+      ...values,
+    };
+    console.log("Signup Values:", signupData);
+    setSubmitting(false);
+    router.push({ pathname: "/signin" });
   };
-
-  console.log("Signup Values:", signupData);
-  setSubmitting(false);
-
-  // إعادة توجيه المستخدم إلى صفحة تسجيل الدخول
-  router.push({ pathname: "/signin" });
-};
 
   const pickImage = async (handleChange: (field: string, value: any) => void) => {
     try {
@@ -197,12 +185,26 @@ const SignupScreen = () => {
         quality: 0.8,
       });
 
-      if (!result.canceled) {
-        setImageUri(result.assets[0].uri);
-        handleChange('companyImage', result.assets[0].uri);
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
+        setImageUri(asset.uri);
+        setImageName(asset.uri.split("/").pop() || t("signup.image_uploaded"));
+        handleChange("companyImage", asset.uri);
       }
     } catch (error) {
       Alert.alert(t("signup.error"), t("signup.image_pick_error"));
+    }
+  };
+
+  const removeImage = () => {
+    setImageUri(null);
+    setImageName(null);
+    handleChange("companyImage")("");
+  };
+
+  const handleChange = (field: string) => (value: any) => {
+    if (field === "companyType") {
+      setBusinessType(value);
     }
   };
 
@@ -232,7 +234,7 @@ const SignupScreen = () => {
             />
           ))}
           <View style={[styles.wrapper, styles.blurContainer]}>
-            <Text style={styles.title}>{t("signup.title") }</Text>
+            <Text style={styles.title}>{t("signup.title")}</Text>
 
             {/* اختيار نوع الحساب */}
             <View style={styles.accountTypeContainer}>
@@ -245,7 +247,10 @@ const SignupScreen = () => {
                     styles.accountTypeButton,
                     accountType === "user" && styles.activeButton,
                   ]}
-                  onPress={() => setAccountType("user")}
+                  onPress={() => {
+                    setAccountType("user");
+                    setStep(1);
+                  }}
                 >
                   <Text
                     style={[
@@ -253,7 +258,7 @@ const SignupScreen = () => {
                       accountType === "user" && styles.activeButtonText,
                     ]}
                   >
-                    {t("signup.user_account") }
+                    {t("signup.user_account")}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -261,7 +266,11 @@ const SignupScreen = () => {
                     styles.accountTypeButton,
                     accountType === "company" && styles.activeButton,
                   ]}
-                  onPress={() => setAccountType("company")}
+                  onPress={() => {
+                    setAccountType("company");
+                    setStep(1);
+                    setBusinessType("store");
+                  }}
                 >
                   <Text
                     style={[
@@ -269,17 +278,17 @@ const SignupScreen = () => {
                       accountType === "company" && styles.activeButtonText,
                     ]}
                   >
-                    {t("signup.company_account") }
+                    {t("signup.company_account")}
                   </Text>
                 </TouchableOpacity>
               </View>
             </View>
 
-            {/* اختيار نوع المستخدم (يظهر فقط عند اختيار حساب مستخدم) */}
+            {/* اختيار نوع المستخدم */}
             {accountType === "user" && (
               <View style={styles.userTypeContainer}>
                 <Text style={styles.userTypeLabel}>
-                  {t("signup.user_type") }
+                  {t("signup.user_type")}
                 </Text>
                 <View style={styles.userTypeOptions}>
                   <TouchableOpacity
@@ -295,7 +304,7 @@ const SignupScreen = () => {
                         userType === "regular" && styles.activeButtonText,
                       ]}
                     >
-                      {t("signup.regular_user") }
+                      {t("signup.regular_user")}
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
@@ -311,7 +320,7 @@ const SignupScreen = () => {
                         userType === "marketer" && styles.activeButtonText,
                       ]}
                     >
-                      {t("signup.marketer") || "مسوق"}
+                      {t("signup.marketer")}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -322,7 +331,7 @@ const SignupScreen = () => {
               initialValues={getInitialValues()}
               validationSchema={getValidationSchema(t)}
               onSubmit={handleSubmit}
-              enableReinitialize={true}
+              enableReinitialize
             >
               {({
                 handleChange,
@@ -336,39 +345,29 @@ const SignupScreen = () => {
                 <View
                   style={[styles.form, isRTL && { alignItems: "flex-end" }]}
                 >
-                  {/* حقول المستخدم العادي أو المسوق */}
-                  {accountType === "user" && (
-                    <>
-                      {/* حقل اسم المستخدم */}
+                  {/* مؤشر التقدم فقط لحساب الشركة */}
+                  {accountType === "company" && (
+                    <View style={styles.progressBarContainer}>
                       <View
                         style={[
-                          styles.inputContainer,
-                          isRTL && { flexDirection: "row-reverse" },
+                          styles.progressBar,
+                          {
+                            width: `${step === 1 ? 50 : 100}%`,
+                          },
                         ]}
-                      >
-                        <Ionicons name="person-outline" size={20} color="#333" />
-                        <TextInput
-                          style={[
-                            styles.input,
-                            isRTL && { textAlign: "right" },
-                          ]}
-                          placeholder={t("signup.username") }
-                          onChangeText={handleChange("username")}
-                          onBlur={handleBlur("username")}
-                          value={values.username}
-                          autoCapitalize="none"
-                        />
-                      </View>
-                      {touched.username && errors.username && (
-                        <Text style={styles.errorText}>{errors.username}</Text>
-                      )}
-                    </>
+                      />
+                      <Text style={styles.progressLabel}>
+                        {step === 1
+                          ? t("signup.step_1_of_2")
+                          : t("signup.step_2_of_2")}
+                      </Text>
+                    </View>
                   )}
 
-                  {/* حقول الشركة */}
-                  {accountType === "company" && (
+                  {/* الخطوة الأولى */}
+                  {accountType === "company" && step === 1 && (
                     <>
-                      {/* حقل اسم الشركة */}
+                      {/* اسم الشركة */}
                       <View
                         style={[
                           styles.inputContainer,
@@ -377,10 +376,7 @@ const SignupScreen = () => {
                       >
                         <Ionicons name="business-outline" size={20} color="#333" />
                         <TextInput
-                          style={[
-                            styles.input,
-                            isRTL && { textAlign: "right" },
-                          ]}
+                          style={[styles.input, isRTL && { textAlign: "right" }]}
                           placeholder={t("signup.company_name")}
                           onChangeText={handleChange("companyName")}
                           onBlur={handleBlur("companyName")}
@@ -390,88 +386,117 @@ const SignupScreen = () => {
                       {touched.companyName && errors.companyName && (
                         <Text style={styles.errorText}>{errors.companyName}</Text>
                       )}
+
+                      {/* البريد الإلكتروني */}
+                      <View
+                        style={[
+                          styles.inputContainer,
+                          isRTL && { flexDirection: "row-reverse" },
+                        ]}
+                      >
+                        <Ionicons name="mail-outline" size={20} color="#333" />
+                        <TextInput
+                          style={[styles.input, isRTL && { textAlign: "right" }]}
+                          placeholder={t("signup.email")}
+                          onChangeText={handleChange("email")}
+                          onBlur={handleBlur("email")}
+                          value={values.email}
+                          keyboardType="email-address"
+                          autoCapitalize="none"
+                        />
+                      </View>
+                      {touched.email && errors.email && (
+                        <Text style={styles.errorText}>{errors.email}</Text>
+                      )}
+
+                      {/* كلمة المرور */}
+                      <View
+                        style={[
+                          styles.inputContainer,
+                          isRTL && { flexDirection: "row-reverse" },
+                        ]}
+                      >
+                        <Ionicons name="lock-closed-outline" size={20} color="#333" />
+                        <TextInput
+                          style={[styles.input, isRTL && { textAlign: "right" }]}
+                          placeholder={t("signup.password")}
+                          onChangeText={handleChange("password")}
+                          onBlur={handleBlur("password")}
+                          value={values.password}
+                          secureTextEntry={!showPassword}
+                          autoCapitalize="none"
+                        />
+                        <TouchableOpacity
+                          onPress={() => setShowPassword(!showPassword)}
+                          style={styles.eyeIconContainer}
+                        >
+                          <Ionicons
+                            name={showPassword ? "eye-outline" : "eye-off-outline"}
+                            size={20}
+                            color="#333"
+                          />
+                        </TouchableOpacity>
+                      </View>
+                      {touched.password && errors.password && (
+                        <Text style={styles.errorText}>{errors.password}</Text>
+                      )}
+
+                     
+                      {/* زر التالي */}
+                      <TouchableOpacity
+                        style={[styles.signupButton, { backgroundColor: "#36C7F6" }]}
+                        onPress={() => setStep(2)}
+                      >
+                        <Text style={styles.signupButtonText}>{t("signup.next_step")}</Text>
+                      </TouchableOpacity>
                     </>
                   )}
 
-                  {/* حقل البريد الإلكتروني (مشترك) */}
-                  <View
-                    style={[
-                      styles.inputContainer,
-                      isRTL && { flexDirection: "row-reverse" },
-                    ]}
-                  >
-                    <Ionicons name="mail-outline" size={20} color="#333" />
-                    <TextInput
-                      style={[styles.input, isRTL && { textAlign: "right" }]}
-                      placeholder={t("signup.email")}
-                      onChangeText={handleChange("email")}
-                      onBlur={handleBlur("email")}
-                      value={values.email}
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                    />
-                  </View>
-                  {touched.email && errors.email && (
-                    <Text style={styles.errorText}>{errors.email}</Text>
-                  )}
-
-                  {/* حقل كلمة المرور (مشترك) */}
-                  <View
-                    style={[
-                      styles.inputContainer,
-                      isRTL && { flexDirection: "row-reverse" },
-                    ]}
-                  >
-                    <Ionicons name="lock-closed-outline" size={20} color="#333" />
-                    <TextInput
-                      style={[styles.input, isRTL && { textAlign: "right" }]}
-                      placeholder={t("signup.password") }
-                      onChangeText={handleChange("password")}
-                      onBlur={handleBlur("password")}
-                      value={values.password}
-                      secureTextEntry={!showPassword}
-                      autoCapitalize="none"
-                    />
-                    <TouchableOpacity
-                      onPress={() => setShowPassword(!showPassword)}
-                      style={styles.eyeIconContainer}
-                    >
-                      <Ionicons
-                        name={showPassword ? "eye-outline" : "eye-off-outline"}
-                        size={20}
-                        color="#333"
-                      />
-                    </TouchableOpacity>
-                  </View>
-                  {touched.password && errors.password && (
-                    <Text style={styles.errorText}>{errors.password}</Text>
-                  )}
-
-                  {/* حقل رقم الهاتف (مشترك) */}
-                  <View
-                    style={[
-                      styles.inputContainer,
-                      isRTL && { flexDirection: "row-reverse" },
-                    ]}
-                  >
-                    <Ionicons name="phone-portrait-outline" size={20} color="#333" />
-                    <TextInput
-                      style={[styles.input, isRTL && { textAlign: "right" }]}
-                      placeholder={t("signup.Phone")}
-                      onChangeText={handleChange("Phone")}
-                      onBlur={handleBlur("Phone")}
-                      value={values.Phone}
-                      keyboardType="phone-pad"
-                    />
-                  </View>
-                  {touched.Phone && errors.Phone && (
-                    <Text style={styles.errorText}>{errors.Phone}</Text>
-                  )}
-
-                  {/* حقول إضافية للشركة */}
-                  {accountType === "company" && (
+                  {/* الخطوة الثانية */}
+                  {accountType === "company" && step === 2 && (
                     <>
-                      {/* حقل نوع الشركة */}
+                      {/* العنوان */}
+                      <View
+                        style={[
+                          styles.inputContainer,
+                          isRTL && { flexDirection: "row-reverse" },
+                        ]}
+                      >
+                        <Ionicons name="location-outline" size={20} color="#333" />
+                        <TextInput
+                          style={[styles.input, isRTL && { textAlign: "right" }]}
+                          placeholder={t("signup.company_address")}
+                          onChangeText={handleChange("address")}
+                          onBlur={handleBlur("address")}
+                          value={values.address}
+                        />
+                      </View>
+                      {touched.address && errors.address && (
+                        <Text style={styles.errorText}>{errors.address}</Text>
+                      )}
+
+                      {/* رقم السجل التجاري */}
+                      <View
+                        style={[
+                          styles.inputContainer,
+                          isRTL && { flexDirection: "row-reverse" },
+                        ]}
+                      >
+                        <Ionicons name="barcode-outline" size={20} color="#333" />
+                        <TextInput
+                          style={[styles.input, isRTL && { textAlign: "right" }]}
+                          placeholder={t("signup.business_reg_number")}
+                          onChangeText={handleChange("businessRegNumber")}
+                          onBlur={handleBlur("businessRegNumber")}
+                          value={values.businessRegNumber}
+                          keyboardType="numeric"
+                        />
+                      </View>
+                      {touched.businessRegNumber && errors.businessRegNumber && (
+                        <Text style={styles.errorText}>{errors.businessRegNumber}</Text>
+                      )}
+
+                      {/* نوع الشركة */}
                       <View style={styles.companyTypeContainer}>
                         <Text style={styles.companyTypeLabel}>
                           {t("signup.select_company_type")}
@@ -480,22 +505,22 @@ const SignupScreen = () => {
                           <TouchableOpacity
                             style={[
                               styles.companyTypeButton,
-                              selectedCompanyType === "store" && styles.activeButton,
+                              businessType === "store" && styles.activeButton,
                             ]}
                             onPress={() => {
-                              setSelectedCompanyType("store");
+                              setBusinessType("store");
                               handleChange("companyType")("store");
                             }}
                           >
-                            <Ionicons 
-                              name="storefront-outline" 
-                              size={24} 
-                              color={selectedCompanyType === "store" ? "#fff" : "#333"} 
+                            <Ionicons
+                              name="storefront-outline"
+                              size={20}
+                              color={businessType === "store" ? "#fff" : "#333"}
                             />
                             <Text
                               style={[
                                 styles.companyTypeButtonText,
-                                selectedCompanyType === "store" && styles.activeButtonText,
+                                businessType === "store" && styles.activeButtonText,
                               ]}
                             >
                               {t("signup.store")}
@@ -504,22 +529,22 @@ const SignupScreen = () => {
                           <TouchableOpacity
                             style={[
                               styles.companyTypeButton,
-                              selectedCompanyType === "company" && styles.activeButton,
+                              businessType === "company" && styles.activeButton,
                             ]}
                             onPress={() => {
-                              setSelectedCompanyType("company");
+                              setBusinessType("company");
                               handleChange("companyType")("company");
                             }}
                           >
-                            <Ionicons 
-                              name="business-outline" 
-                              size={24} 
-                              color={selectedCompanyType === "company" ? "#fff" : "#333"} 
+                            <Ionicons
+                              name="business-outline"
+                              size={20}
+                              color={businessType === "company" ? "#fff" : "#333"}
                             />
                             <Text
                               style={[
                                 styles.companyTypeButtonText,
-                                selectedCompanyType === "company" && styles.activeButtonText,
+                                businessType === "company" && styles.activeButtonText,
                               ]}
                             >
                               {t("signup.company")}
@@ -531,107 +556,174 @@ const SignupScreen = () => {
                         <Text style={styles.errorText}>{errors.companyType}</Text>
                       )}
 
-                       {/* حقل رقم السجل التجاري */}
-                       <View
-                        style={[
-                          styles.inputContainer,
-                          isRTL && { flexDirection: "row-reverse" },
-                        ]}
-                      >
-                        <Ionicons name="location-outline" size={20} color="#333" />
-                        <TextInput
+                      {/* رفع الصورة (يظهر فقط إذا كان نوع الشركة هو شركة) */}
+                      {businessType === "company" && (
+                        <View
                           style={[
-                            styles.input,
-                            isRTL && { textAlign: "right" },
+                            styles.inputContainer,
+                            isRTL && { flexDirection: "row-reverse" },
                           ]}
-                          placeholder={t("signup.company_address") }
-                          onChangeText={handleChange("address")}
-                          onBlur={handleBlur("address")}
-                          value={values.address}
-                        />
-                      </View>
-                      {touched.address && errors.address && (
-                        <Text style={styles.errorText}>{errors.address}</Text>
-                      )}
-
-
-
-
-                      {/* حقل صورة الشركة */}
-                      <View
-                        style={[
-                          styles.inputContainer,
-                          isRTL && { flexDirection: "row-reverse" },
-                        ]}
-                      >
-                        <Ionicons name="image-outline" size={20} color="#333" />
-                        <TouchableOpacity
-                          style={styles.imageUploadButton}
-                          onPress={() => pickImage(handleChange)}
                         >
-                          {imageUri ? (
-                            <View style={styles.imagePreviewContainer}>
-                              <Image
-                                source={{ uri: imageUri }}
-                                style={styles.imagePreview}
-                              />
-                              <Text style={styles.imageUploadText}>
-                                {t("signup.change_image")}
-                              </Text>
-                            </View>
-                          ) : (
-                            <Text style={styles.imageUploadText}>
-                              {t("signup.upload_image")}
-                            </Text>
-                          )}
-                        </TouchableOpacity>
-                      </View>
+                          <Ionicons name="image-outline" size={20} color="#333" />
+                          <View style={styles.imageUploadRow}>
+                            {!imageUri ? (
+                              <TouchableOpacity
+                                style={styles.imageUploadButton}
+                                onPress={() => pickImage(handleChange)}
+                              >
+                                <Text style={styles.imageUploadText}>
+                                  {t("signup.upload_image")}
+                                </Text>
+                              </TouchableOpacity>
+                            ) : (
+                              <>
+                                <Text style={styles.imageName}>{imageName}</Text>
+                                <TouchableOpacity
+                                  style={styles.removeImageButton}
+                                  onPress={removeImage}
+                                >
+                                  <Text style={styles.removeIcon}>×</Text>
+                                </TouchableOpacity>
+                              </>
+                            )}
+                          </View>
+                        </View>
+                      )}
                       {touched.companyImage && errors.companyImage && (
                         <Text style={styles.errorText}>{errors.companyImage}</Text>
                       )}
 
-                     
-                     
+                      {/* زر إرسال النموذج */}
+                      <TouchableOpacity
+                        style={[styles.signupButton, { backgroundColor: "#36C7F6" }]}
+                        onPress={() => handleSubmit()}
+                        disabled={isSubmitting}
+                      >
+                        <Text style={styles.signupButtonText}>{t("signup.signup_button")}</Text>
+                      </TouchableOpacity>
+
+                      {/* زر العودة */}
+                      <TouchableOpacity
+                        style={[styles.signupButton, { backgroundColor: "#ccc", marginTop: 10 }]}
+                        onPress={() => setStep(1)}
+                      >
+                        <Text style={styles.signupButtonText}>{t("signup.back")}</Text>
+                      </TouchableOpacity>
+
                     </>
                   )}
 
-                  {/* حقل العنوان (في النهاية للمتجر) */}
+                  {/* بيانات المستخدم */}
                   {accountType === "user" && (
                     <>
+                      {/* اسم المستخدم */}
                       <View
                         style={[
                           styles.inputContainer,
                           isRTL && { flexDirection: "row-reverse" },
                         ]}
                       >
-                        <Ionicons name="location-outline" size={20} color="#333" />
+                        <Ionicons name="person-outline" size={20} color="#333" />
                         <TextInput
-                          style={[
-                            styles.input,
-                            isRTL && { textAlign: "right" },
-                          ]}
-                          placeholder={t("signup.address")}
-                          onChangeText={handleChange("address")}
-                          onBlur={handleBlur("address")}
-                          value={values.address}
+                          style={[styles.input, isRTL && { textAlign: "right" }]}
+                          placeholder={t("signup.username")}
+                          onChangeText={handleChange("username")}
+                          onBlur={handleBlur("username")}
+                          value={values.username}
+                          autoCapitalize="none"
                         />
                       </View>
-                      {touched.address && errors.address && (
-                        <Text style={styles.errorText}>{errors.address}</Text>
+                      {touched.username && errors.username && (
+                        <Text style={styles.errorText}>{errors.username}</Text>
                       )}
+
+                      {/* البريد الإلكتروني */}
+                      <View
+                        style={[
+                          styles.inputContainer,
+                          isRTL && { flexDirection: "row-reverse" },
+                        ]}
+                      >
+                        <Ionicons name="mail-outline" size={20} color="#333" />
+                        <TextInput
+                          style={[styles.input, isRTL && { textAlign: "right" }]}
+                          placeholder={t("signup.email")}
+                          onChangeText={handleChange("email")}
+                          onBlur={handleBlur("email")}
+                          value={values.email}
+                          keyboardType="email-address"
+                          autoCapitalize="none"
+                        />
+                      </View>
+                      {touched.email && errors.email && (
+                        <Text style={styles.errorText}>{errors.email}</Text>
+                      )}
+
+                      {/* كلمة المرور */}
+                      <View
+                        style={[
+                          styles.inputContainer,
+                          isRTL && { flexDirection: "row-reverse" },
+                        ]}
+                      >
+                        <Ionicons name="lock-closed-outline" size={20} color="#333" />
+                        <TextInput
+                          style={[styles.input, isRTL && { textAlign: "right" }]}
+                          placeholder={t("signup.password")}
+                          onChangeText={handleChange("password")}
+                          onBlur={handleBlur("password")}
+                          value={values.password}
+                          secureTextEntry={!showPassword}
+                          autoCapitalize="none"
+                        />
+                        <TouchableOpacity
+                          onPress={() => setShowPassword(!showPassword)}
+                          style={styles.eyeIconContainer}
+                        >
+                          <Ionicons
+                            name={showPassword ? "eye-outline" : "eye-off-outline"}
+                            size={20}
+                            color="#333"
+                          />
+                        </TouchableOpacity>
+                      </View>
+                      {touched.password && errors.password && (
+                        <Text style={styles.errorText}>{errors.password}</Text>
+                      )}
+
+
+                      {/* الهاتف */}
+                      <View
+                        style={[
+                          styles.inputContainer,
+                          isRTL && { flexDirection: "row-reverse" },
+                        ]}
+                      >
+                        <Ionicons name="phone-portrait-outline" size={20} color="#333" />
+                        <TextInput
+                          style={[styles.input, isRTL && { textAlign: "right" }]}
+                          placeholder={t("signup.Phone")}
+                          onChangeText={handleChange("Phone")}
+                          onBlur={handleBlur("Phone")}
+                          value={values.Phone}
+                          keyboardType="phone-pad"
+                        />
+                      </View>
+                      {touched.Phone && errors.Phone && (
+                        <Text style={styles.errorText}>{errors.Phone}</Text>
+                      )}
+
+                     
+                      {/* زر التسجيل */}
+                      <TouchableOpacity
+                        style={styles.signupButton}
+                        onPress={() => handleSubmit()}
+                        disabled={isSubmitting}
+                      >
+                        <Text style={styles.signupButtonText}>{t("signup.signup_button")}</Text>
+                      </TouchableOpacity>
                     </>
                   )}
-
-                  {/* زر التسجيل */}
-                  <TouchableOpacity
-                    style={styles.signupButton}
-                    onPress={() => handleSubmit() }
-                    disabled={isSubmitting}
-                  >
-                    <Text style={styles.signupButtonText}>
-                      {t("signup.signup_button") }
-                    </Text>
-                  </TouchableOpacity>
 
                   {/* رابط تسجيل الدخول */}
                   <TouchableOpacity
@@ -639,9 +731,7 @@ const SignupScreen = () => {
                   >
                     <Text style={styles.loginText}>
                       {t("signup.already_have_account")}
-                      <Text style={styles.loginLink}>
-                        {t("signup.login")}
-                      </Text>
+                      <Text style={styles.loginLink}> {t("signup.login")}</Text>
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -759,6 +849,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ddd",
   },
+  userTypeButtonText: {
+    fontSize: 12,
+    color: "#333",
+    fontWeight: "500",
+  },
   form: {
     width: "100%",
   },
@@ -814,32 +909,27 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginLeft: 5,
   },
-  userTypeButtonText: {
-    fontSize: 12,
-    color: "#333",
-    fontWeight: "500",
-    },
   imageUploadButton: {
     flex: 1,
     paddingVertical: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   imageUploadText: {
-    color: '#36C7F6',
+    color: "#36C7F6",
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   imagePreviewContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 10,
   },
   imagePreview: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: "#f0f0f0",
   },
   companyTypeContainer: {
     marginBottom: 20,
@@ -858,7 +948,7 @@ const styles = StyleSheet.create({
   companyTypeButton: {
     flex: 1,
     backgroundColor: "#f0f0f0",
-    padding: 15,
+    padding: 10,
     borderRadius: 12,
     alignItems: "center",
     borderWidth: 1,
@@ -871,5 +961,43 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#333",
     fontWeight: "500",
+  },
+  progressBarContainer: {
+    width: "100%",
+    height: 10,
+    backgroundColor: "#e0e0e0",
+    borderRadius: 5,
+    overflow: "hidden",
+    marginBottom: 20,
+  },
+  progressBar: {
+    height: "100%",
+    backgroundColor: "#36C7F6",
+    borderRadius: 5,
+  },
+  progressLabel: {
+    textAlign: "center",
+    marginTop: 8,
+    fontSize: 14,
+    color: "#666",
+  },
+  imageUploadRow: {
+    flex: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  imageName: {
+    flex: 1,
+    fontSize: 14,
+    color: "#333",
+  },
+  removeImageButton: {
+    marginLeft: 10,
+    padding: 5,
+  },
+  removeIcon: {
+    fontSize: 18,
+    color: "red",
   },
 });
