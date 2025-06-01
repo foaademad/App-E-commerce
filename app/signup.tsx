@@ -1,17 +1,21 @@
 import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from 'expo-image-picker';
 import { Stack, useRouter } from "expo-router";
 import { Formik } from "formik";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  Alert,
   Animated,
   Dimensions,
+  Image,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import * as Yup from "yup";
 import { useLanguage } from "../src/context/LanguageContext";
@@ -52,6 +56,9 @@ const CompanySchema = (t: any) =>
     businessRegNumber: Yup.string().required(
       t("signup.business_reg_number_required")
     ),
+    Phone: Yup.string().required(t("signup.Phone_required")),
+    companyType: Yup.string().required(t("signup.company_type_required")),
+    companyImage: Yup.string().required(t("signup.company_image_required")),
   });
 
 const SignupScreen = () => {
@@ -68,11 +75,13 @@ const SignupScreen = () => {
     y: new Animated.Value(Math.random() * Dimensions.get('window').height),
     size: Math.random() * 50 + 50,
   })));
+  const [selectedCompanyType, setSelectedCompanyType] = useState("store");
+  const [imageUri, setImageUri] = useState<string | null>(null);
 
   useEffect(() => {
     setIsRTL(language === "ar");
   }, [language]);
-
+  //to animate the balls
   useEffect(() => {
     const animateBalls = () => {
       const animations = balls.map(ball => {
@@ -110,6 +119,20 @@ const SignupScreen = () => {
     animateBalls();
   }, []);
 
+  useEffect(() => {
+    (async () => {
+      if (Platform.OS !== 'web') {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert(
+            t("signup.permission_required"),
+            t("signup.camera_permission_message")
+          );
+        }
+      }
+    })();
+  }, []);
+
   const getInitialValues = () => {
     if (accountType === "company") {
       return {
@@ -119,6 +142,9 @@ const SignupScreen = () => {
         confirmPassword: "",
         address: "",
         businessRegNumber: "",
+        Phone: "",
+        companyType: "store",
+        companyImage: "",
       };
     } else {
       return {
@@ -126,6 +152,8 @@ const SignupScreen = () => {
         email: "",
         password: "",
         confirmPassword: "",
+        Phone: "",
+        address: "",
       };
     }
   };
@@ -159,6 +187,25 @@ const SignupScreen = () => {
   // إعادة توجيه المستخدم إلى صفحة تسجيل الدخول
   router.push({ pathname: "/signin" });
 };
+
+  const pickImage = async (handleChange: (field: string, value: any) => void) => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (!result.canceled) {
+        setImageUri(result.assets[0].uri);
+        handleChange('companyImage', result.assets[0].uri);
+      }
+    } catch (error) {
+      Alert.alert(t("signup.error"), t("signup.image_pick_error"));
+    }
+  };
+
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
@@ -400,47 +447,92 @@ const SignupScreen = () => {
                     <Text style={styles.errorText}>{errors.password}</Text>
                   )}
 
-                  {/* حقل تأكيد كلمة المرور (مشترك) */}
+                  {/* حقل رقم الهاتف (مشترك) */}
                   <View
                     style={[
                       styles.inputContainer,
                       isRTL && { flexDirection: "row-reverse" },
                     ]}
                   >
-                    <Ionicons name="lock-closed-outline" size={20} color="#333" />
+                    <Ionicons name="phone-portrait-outline" size={20} color="#333" />
                     <TextInput
                       style={[styles.input, isRTL && { textAlign: "right" }]}
-                      placeholder={
-                        t("signup.confirm_password") 
-                      }
-                      onChangeText={handleChange("confirmPassword")}
-                      onBlur={handleBlur("confirmPassword")}
-                      value={values.confirmPassword}
-                      secureTextEntry={!showConfirmPassword}
-                      autoCapitalize="none"
+                      placeholder={t("signup.Phone")}
+                      onChangeText={handleChange("Phone")}
+                      onBlur={handleBlur("Phone")}
+                      value={values.Phone}
+                      keyboardType="phone-pad"
                     />
-                    <TouchableOpacity
-                      onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                      style={styles.eyeIconContainer}
-                    >
-                      <Ionicons
-                        name={
-                          showConfirmPassword ? "eye-outline" : "eye-off-outline"
-                        }
-                        size={20}
-                        color="#333"
-                      />
-                    </TouchableOpacity>
                   </View>
-                  {touched.confirmPassword && errors.confirmPassword && (
-                    <Text style={styles.errorText}>{errors.confirmPassword}</Text>
+                  {touched.Phone && errors.Phone && (
+                    <Text style={styles.errorText}>{errors.Phone}</Text>
                   )}
 
                   {/* حقول إضافية للشركة */}
                   {accountType === "company" && (
                     <>
-                      {/* حقل عنوان الشركة */}
-                      <View
+                      {/* حقل نوع الشركة */}
+                      <View style={styles.companyTypeContainer}>
+                        <Text style={styles.companyTypeLabel}>
+                          {t("signup.select_company_type")}
+                        </Text>
+                        <View style={styles.companyTypeOptions}>
+                          <TouchableOpacity
+                            style={[
+                              styles.companyTypeButton,
+                              selectedCompanyType === "store" && styles.activeButton,
+                            ]}
+                            onPress={() => {
+                              setSelectedCompanyType("store");
+                              handleChange("companyType")("store");
+                            }}
+                          >
+                            <Ionicons 
+                              name="storefront-outline" 
+                              size={24} 
+                              color={selectedCompanyType === "store" ? "#fff" : "#333"} 
+                            />
+                            <Text
+                              style={[
+                                styles.companyTypeButtonText,
+                                selectedCompanyType === "store" && styles.activeButtonText,
+                              ]}
+                            >
+                              {t("signup.store")}
+                            </Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={[
+                              styles.companyTypeButton,
+                              selectedCompanyType === "company" && styles.activeButton,
+                            ]}
+                            onPress={() => {
+                              setSelectedCompanyType("company");
+                              handleChange("companyType")("company");
+                            }}
+                          >
+                            <Ionicons 
+                              name="business-outline" 
+                              size={24} 
+                              color={selectedCompanyType === "company" ? "#fff" : "#333"} 
+                            />
+                            <Text
+                              style={[
+                                styles.companyTypeButtonText,
+                                selectedCompanyType === "company" && styles.activeButtonText,
+                              ]}
+                            >
+                              {t("signup.company")}
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                      {touched.companyType && errors.companyType && (
+                        <Text style={styles.errorText}>{errors.companyType}</Text>
+                      )}
+
+                       {/* حقل رقم السجل التجاري */}
+                       <View
                         style={[
                           styles.inputContainer,
                           isRTL && { flexDirection: "row-reverse" },
@@ -462,31 +554,70 @@ const SignupScreen = () => {
                         <Text style={styles.errorText}>{errors.address}</Text>
                       )}
 
-                      {/* حقل رقم السجل التجاري */}
+
+
+
+                      {/* حقل صورة الشركة */}
                       <View
                         style={[
                           styles.inputContainer,
                           isRTL && { flexDirection: "row-reverse" },
                         ]}
                       >
-                        <Ionicons name="document-outline" size={20} color="#333" />
+                        <Ionicons name="image-outline" size={20} color="#333" />
+                        <TouchableOpacity
+                          style={styles.imageUploadButton}
+                          onPress={() => pickImage(handleChange)}
+                        >
+                          {imageUri ? (
+                            <View style={styles.imagePreviewContainer}>
+                              <Image
+                                source={{ uri: imageUri }}
+                                style={styles.imagePreview}
+                              />
+                              <Text style={styles.imageUploadText}>
+                                {t("signup.change_image")}
+                              </Text>
+                            </View>
+                          ) : (
+                            <Text style={styles.imageUploadText}>
+                              {t("signup.upload_image")}
+                            </Text>
+                          )}
+                        </TouchableOpacity>
+                      </View>
+                      {touched.companyImage && errors.companyImage && (
+                        <Text style={styles.errorText}>{errors.companyImage}</Text>
+                      )}
+
+                     
+                     
+                    </>
+                  )}
+
+                  {/* حقل العنوان (في النهاية للمتجر) */}
+                  {accountType === "user" && (
+                    <>
+                      <View
+                        style={[
+                          styles.inputContainer,
+                          isRTL && { flexDirection: "row-reverse" },
+                        ]}
+                      >
+                        <Ionicons name="location-outline" size={20} color="#333" />
                         <TextInput
                           style={[
                             styles.input,
                             isRTL && { textAlign: "right" },
                           ]}
-                          placeholder={
-                            t("signup.business_reg_number") 
-                          }
-                          onChangeText={handleChange("businessRegNumber")}
-                          onBlur={handleBlur("businessRegNumber")}
-                          value={values.businessRegNumber}
+                          placeholder={t("signup.address")}
+                          onChangeText={handleChange("address")}
+                          onBlur={handleBlur("address")}
+                          value={values.address}
                         />
                       </View>
-                      {touched.businessRegNumber && errors.businessRegNumber && (
-                        <Text style={styles.errorText}>
-                          {errors.businessRegNumber}
-                        </Text>
+                      {touched.address && errors.address && (
+                        <Text style={styles.errorText}>{errors.address}</Text>
                       )}
                     </>
                   )}
@@ -688,4 +819,57 @@ const styles = StyleSheet.create({
     color: "#333",
     fontWeight: "500",
     },
+  imageUploadButton: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  imageUploadText: {
+    color: '#36C7F6',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  imagePreviewContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  imagePreview: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#f0f0f0',
+  },
+  companyTypeContainer: {
+    marginBottom: 20,
+  },
+  companyTypeLabel: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 10,
+  },
+  companyTypeOptions: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 10,
+  },
+  companyTypeButton: {
+    flex: 1,
+    backgroundColor: "#f0f0f0",
+    padding: 15,
+    borderRadius: 12,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 8,
+  },
+  companyTypeButtonText: {
+    fontSize: 14,
+    color: "#333",
+    fontWeight: "500",
+  },
 });

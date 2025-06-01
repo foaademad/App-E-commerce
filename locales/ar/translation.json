@@ -49,6 +49,9 @@
       "user_type": "نوع المستخدم",
       "regular_user": "مستخدم عادي",
       "marketer": "مسوق",
+      "phone": "رقم الهاتف*",
+      "phone_required": "رقم الهاتف مطلوب",
+      "phone_min": "رقم الهاتف يجب أن يكون 3 أحرف على الأقل",
       "username": "اسم المستخدم*",
       "username_required": "اسم المستخدم مطلوب",
       "username_min": "اسم المستخدم يجب أن يكون 3 أحرف على الأقل",
@@ -88,7 +91,18 @@
       "address_max": "العنوان يجب ان يكون 20 حرفًا على الاكثر",
       "address_invalid": "العنوان يجب ان يحتوي على حروف، ارقام ومسافات فقط",
       "signup_button": "إنشاء حساب",
-      "signup_success": "تم إنشاء حسابك بنجاح"
+      "signup_success": "تم إنشاء حسابك بنجاح",
+      "company_type_required": "نوع الشركة مطلوب",
+      "company_image_required": "صورة الشركة مطلوبة",
+      "upload_image": "رفع صورة",
+      "change_image": "تعديل الصورة",
+      "image_pick_error": "فشل في اختيار الصورة. يرجى المحاولة مرة أخرى.",
+      "permission_required": "الإذن مطلوب",
+      "gallery_permission_message": "يرجى السماح بالوصول إلى مكتبة الصور لتغيير صورة الملف الشخصي",
+      "error": "خطأ",
+      "success": "تم بنجاح",
+      "select_company_type": "اختر نوع الشركة",
+      "store": "متجر"
     },
   "profile": {
     "edit_profile": {
