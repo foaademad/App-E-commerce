@@ -1,11 +1,19 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
+import { Platform } from "react-native";
 import * as Keychain from "react-native-keychain";
 
+// Types
 interface User {
   id: string;
   email: string;
   name: string;
+}
+
+interface FileData {
+  uri: string;
+  name: string;
+  type?: string;
 }
 
 interface AuthState {
@@ -26,9 +34,9 @@ const initialState: AuthState = {
   registerSuccess: false,
 };
 
-// Async Thunks for login,register,logout, getToken
+// Async Thunks
 
-//to login the user
+// تسجيل الدخول
 export const login = createAsyncThunk(
   "auth/login",
   async (
@@ -48,28 +56,26 @@ export const login = createAsyncThunk(
   }
 );
 
-// to register the user
+// التسجيل
 export const register = createAsyncThunk(
   "auth/register",
   async (
     credentials: {
-        Password: string;
-        ConfirmPassword: string;
-        IsCompanyOrShop: boolean;
-        CommercialRegister: File; // الحقل الذي يحتوي على الملف
-        CommercialRegisterName: string;
-        Location: string;
-        Email: string;
-        FullName: string;
-        PhoneNumber: string;
-        IsCompany: boolean;
-        IsMarketer: boolean;
-        CreatedAt: string;
+      Password: string;
+      ConfirmPassword: string;
+      IsCompanyOrShop: boolean;
+      Location: string;
+      Email: string;
+      FullName: string;
+      PhoneNumber: string;
+      IsCompany: boolean;
+      IsMarketer: boolean;
+      CreatedAt: string;
+      CommercialRegister: FileData;
     },
     { rejectWithValue }
   ) => {
     try {
-          // إنشاء FormData لجمع البيانات
       const formData = new FormData();
 
       // إضافة الحقول النصية
@@ -83,7 +89,15 @@ export const register = createAsyncThunk(
       formData.append("IsCompany", String(credentials.IsCompany));
       formData.append("IsMarketer", String(credentials.IsMarketer));
       formData.append("CreatedAt", credentials.CreatedAt);
-      formData.append("CommercialRegister", credentials.CommercialRegister , credentials.CommercialRegisterName);
+
+      // إضافة الملف
+      formData.append("CommercialRegister", {
+        uri: Platform.OS === 'ios' ? credentials.CommercialRegister.uri.replace('file://', '') : credentials.CommercialRegister.uri,
+        type: credentials.CommercialRegister.type || "image/jpeg",
+        name: credentials.CommercialRegister.name
+      } as any);
+
+      // إرسال الطلب
       const response = await axios.post(
         "http://localhost:5000/api/Account/register",
         formData,
@@ -93,15 +107,15 @@ export const register = createAsyncThunk(
           },
         }
       );
+
       return response.data;
     } catch (error: any) {
-      return rejectWithValue(
-        error.response?.data?.message || "Register failed"
-      );
+      return rejectWithValue(error.response?.data?.message || "Register failed");
     }
   }
 );
-//to logout the user
+
+// تسجيل الخروج
 export const logout = createAsyncThunk(
   "auth/logout",
   async (_, { rejectWithValue }) => {
@@ -114,7 +128,7 @@ export const logout = createAsyncThunk(
   }
 );
 
-//to get the token from the keychain
+// جلب التوكن من الـ Keychain
 export const getToken = createAsyncThunk(
   "auth/getToken",
   async (_, { rejectWithValue }) => {
@@ -130,45 +144,38 @@ export const getToken = createAsyncThunk(
   }
 );
 
-//to create the slice
+// Slice
 const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    //to set the user
     setUser: (state, action) => {
       state.user = action.payload;
     },
-    //to set the token
     setToken: (state, action) => {
       state.token = action.payload;
     },
-    //to set the isAuthenticated
     setIsAuthenticated: (state, action) => {
       state.isAuthenticated = action.payload;
     },
-    //to set the isLoading
     setIsLoading: (state, action) => {
       state.isLoading = action.payload;
     },
-    //to set the error
     setError: (state, action) => {
       state.error = action.payload;
     },
-    //to logout the user
     logoutUser: (state) => {
       state.user = null;
       state.token = null;
       state.error = null;
     },
-    //to register the user
     registerUser: (state) => {
       state.registerSuccess = true;
     },
   },
   extraReducers: (builder) => {
     builder
-      //to login the user
+      // Login
       .addCase(login.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -185,7 +192,7 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
       })
 
-      //to logout the user
+      // Logout
       .addCase(logout.pending, (state) => {
         state.isLoading = true;
       })
@@ -200,7 +207,7 @@ const authSlice = createSlice({
         state.error = action.payload as string;
       })
 
-      //to get the token
+      // Get Token
       .addCase(getToken.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -215,10 +222,9 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.error = action.payload as string;
       })
-      //   =========================================================================
-      //to register the user
 
-    .addCase(register.pending, (state) => {
+      // Register
+      .addCase(register.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
@@ -232,15 +238,18 @@ const authSlice = createSlice({
         } else {
           state.isAuthenticated = false;
         }
+        state.registerSuccess = true;
       })
       .addCase(register.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
         state.isAuthenticated = false;
+        state.registerSuccess = false;
       });
   },
 });
 
+// Exports
 export const {
   setUser,
   setToken,
