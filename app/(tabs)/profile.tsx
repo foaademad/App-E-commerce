@@ -58,12 +58,7 @@ const ProfileScreen = () => {
       title: t('profile.cards'),
       icon: <CreditCard size={24} color="#36c7f6" />,
       onPress: () => router.push('/payment-methods' as any),
-    },
-    {
-      title: t('profile.order_history.title'),
-      icon: <History size={24} color="#36c7f6" />,
-      onPress: () => router.push('/order-history' as any),
-    },
+    }
   ];
 
   const settingsItems = [
