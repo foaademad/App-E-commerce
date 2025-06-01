@@ -16,8 +16,24 @@ import {
   TouchableOpacity,
   View
 } from "react-native";
+import { useDispatch, useSelector } from "react-redux";
 import * as Yup from "yup";
 import { useLanguage } from "../src/context/LanguageContext";
+import { register } from "../src/store/slice/authSlice";
+import { AppDispatch, RootState } from "../src/store/store";
+
+interface FormValues {
+  username: string;
+  companyName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  address: string;
+  businessRegNumber: string;
+  Phone: string;
+  companyType: string;
+  companyImage: string;
+}
 
 // مخطط التحقق من صحة الإدخال باستخدام Yup للمستخدم العادي
 const RegularUserSchema = (t: any) =>
@@ -36,35 +52,9 @@ const RegularUserSchema = (t: any) =>
       .required(t("signup.confirm_password_required")),
   });
 
-// مخطط التحقق من صحة الإدخال باستخدام Yup للشركة
-const CompanySchema = (t: any) =>
-  Yup.object().shape({
-    companyName: Yup.string()
-      .min(3, t("signup.company_name_min"))
-      .required(t("signup.company_name_required")),
-    email: Yup.string()
-      .email(t("signup.email_invalid"))
-      .required(t("signup.email_required")),
-    password: Yup.string()
-      .min(6, t("signup.password_min"))
-      .required(t("signup.password_required")),
-    confirmPassword: Yup.string()
-      .oneOf([Yup.ref("password")], t("signup.passwords_must_match"))
-      .required(t("signup.confirm_password_required")),
-    address: Yup.string().required(t("signup.address_required")),
-    businessRegNumber: Yup.string().required(
-      t("signup.business_reg_number_required")
-    ),
-    Phone: Yup.string().required(t("signup.Phone_required")),
-    companyType: Yup.string().required(t("signup.company_type_required")),
-    companyImage: Yup.string().when('companyType', {
-      is: 'company',
-      then: schema => schema.required(t("signup.company_image_required")),
-      otherwise: schema => schema.notRequired(),
-    }),
-  });
-
 const SignupScreen = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { isLoading, error, registerSuccess } = useSelector((state: RootState) => state.auth);
   const { t } = useTranslation();
   const { language } = useLanguage();
   const [isRTL, setIsRTL] = useState(language === "ar");
@@ -82,6 +72,41 @@ const SignupScreen = () => {
     y: new Animated.Value(Math.random() * Dimensions.get('window').height),
     size: Math.random() * 50 + 50,
   })));
+
+  // مخطط التحقق من صحة الإدخال باستخدام Yup للشركة
+  const getCompanySchema = (t: any) => {
+    return Yup.object().shape({
+      companyName: Yup.string()
+        .min(3, t("signup.company_name_min"))
+        .required(t("signup.company_name_required")),
+      email: Yup.string()
+        .email(t("signup.email_invalid"))
+        .required(t("signup.email_required")),
+      password: Yup.string()
+        .min(6, t("signup.password_min"))
+        .required(t("signup.password_required")),
+      confirmPassword: Yup.string()
+        .oneOf([Yup.ref("password")], t("signup.passwords_must_match"))
+        .required(t("signup.confirm_password_required")),
+      address: Yup.string().required(t("signup.address_required")),
+      businessRegNumber: Yup.string().required(
+        t("signup.business_reg_number_required")
+      ),
+      Phone: Yup.string().required(t("signup.Phone_required")),
+      companyType: Yup.string().required(t("signup.company_type_required")),
+      companyImage: Yup.string().when('companyType', {
+        is: 'company',
+        then: schema => schema.test('has-image', t("signup.company_image_required"), function() {
+          return imageUri !== null;
+        }),
+        otherwise: schema => schema.notRequired(),
+      }),
+    });
+  };
+
+  const getValidationSchema = (t: any) => {
+    return accountType === "company" ? getCompanySchema(t) : RegularUserSchema(t);
+  };
 
   useEffect(() => {
     setIsRTL(language === "ar");
@@ -137,9 +162,10 @@ const SignupScreen = () => {
     })();
   }, []);
 
-  const getInitialValues = () => {
+  const getInitialValues = (): FormValues => {
     if (accountType === "company") {
       return {
+        username: "",
         companyName: "",
         email: "",
         password: "",
@@ -153,27 +179,65 @@ const SignupScreen = () => {
     } else {
       return {
         username: "",
+        companyName: "",
         email: "",
         password: "",
         confirmPassword: "",
-        Phone: "",
         address: "",
+        businessRegNumber: "",
+        Phone: "",
+        companyType: "",
+        companyImage: "",
       };
     }
   };
 
-  const getValidationSchema = (t: any) => {
-    return accountType === "company" ? CompanySchema(t) : RegularUserSchema(t);
-  };
+  const handleSubmit = async (values: FormValues, { setSubmitting }: any) => {
+    try {
+      const registerData = {
+        Password: values.password,
+        ConfirmPassword: values.confirmPassword,
+        IsCompanyOrShop: accountType === "company",
+        Location: values.address || "",
+        Email: values.email,
+        FullName: accountType === "company" ? values.companyName : values.username,
+        PhoneNumber: values.Phone,
+        IsCompany: businessType === "company",
+        IsMarketer: userType === "marketer",
+        CreatedAt: new Date().toISOString(),
+        CommercialRegister: {
+          uri: imageUri || "",
+          name: imageName || "commercial_register.jpg",
+          type: "image/jpeg"
+        }
+      };
 
-  const handleSubmit = (values: any, { setSubmitting }: any) => {
-    const signupData = {
-      accountType: userType,
-      ...values,
-    };
-    console.log("Signup Values:", signupData);
-    setSubmitting(false);
-    router.push({ pathname: "/signin" });
+      console.log('Submitting registration data:', registerData); // Debug log
+
+      const result = await dispatch(register(registerData)).unwrap();
+      console.log('Registration result:', result); // Debug log
+      
+      if (result) {
+        Alert.alert(
+          t("signup.success"),
+          t("signup.registration_successful"),
+          [
+            {
+              text: "OK",
+              onPress: () => router.push({ pathname: "/signin" })
+            }
+          ]
+        );
+      }
+    } catch (error: any) {
+      console.error('Registration error:', error); // Debug log
+      Alert.alert(
+        t("signup.error"),
+        error.message || t("signup.registration_failed")
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const pickImage = async (handleChange: (field: string, value: any) => void) => {
@@ -196,10 +260,10 @@ const SignupScreen = () => {
     }
   };
 
-  const removeImage = () => {
+  const removeImage = (handleChange: (field: string, value: any) => void) => {
     setImageUri(null);
     setImageName(null);
-    handleChange("companyImage")("");
+    handleChange("companyImage", "");
   };
 
   const handleChange = (field: string) => (value: any) => {
@@ -327,7 +391,7 @@ const SignupScreen = () => {
               </View>
             )}
 
-            <Formik
+            <Formik<FormValues>
               initialValues={getInitialValues()}
               validationSchema={getValidationSchema(t)}
               onSubmit={handleSubmit}
@@ -441,7 +505,38 @@ const SignupScreen = () => {
                         <Text style={styles.errorText}>{errors.password}</Text>
                       )}
 
-                     
+                      {/* تأكيد كلمة المرور */}
+                      <View
+                        style={[
+                          styles.inputContainer,
+                          isRTL && { flexDirection: "row-reverse" },
+                        ]}
+                      >
+                        <Ionicons name="lock-closed-outline" size={20} color="#333" />
+                        <TextInput
+                          style={[styles.input, isRTL && { textAlign: "right" }]}
+                          placeholder={t("signup.confirm_password")}
+                          onChangeText={handleChange("confirmPassword")}
+                          onBlur={handleBlur("confirmPassword")}
+                          value={values.confirmPassword}
+                          secureTextEntry={!showConfirmPassword}
+                          autoCapitalize="none"
+                        />
+                        <TouchableOpacity
+                          onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                          style={styles.eyeIconContainer}
+                        >
+                          <Ionicons
+                            name={showConfirmPassword ? "eye-outline" : "eye-off-outline"}
+                            size={20}
+                            color="#333"
+                          />
+                        </TouchableOpacity>
+                      </View>
+                      {touched.confirmPassword && errors.confirmPassword && (
+                        <Text style={styles.errorText}>{errors.confirmPassword}</Text>
+                      )}
+
                       {/* زر التالي */}
                       <TouchableOpacity
                         style={[styles.signupButton, { backgroundColor: "#36C7F6" }]}
@@ -580,7 +675,7 @@ const SignupScreen = () => {
                                 <Text style={styles.imageName}>{imageName}</Text>
                                 <TouchableOpacity
                                   style={styles.removeImageButton}
-                                  onPress={removeImage}
+                                  onPress={() => removeImage(handleChange)}
                                 >
                                   <Text style={styles.removeIcon}>×</Text>
                                 </TouchableOpacity>
@@ -595,11 +690,13 @@ const SignupScreen = () => {
 
                       {/* زر إرسال النموذج */}
                       <TouchableOpacity
-                        style={[styles.signupButton, { backgroundColor: "#36C7F6" }]}
+                        style={[styles.signupButton, isLoading && styles.disabledButton]}
                         onPress={() => handleSubmit()}
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || isLoading}
                       >
-                        <Text style={styles.signupButtonText}>{t("signup.signup_button")}</Text>
+                        <Text style={styles.signupButtonText}>
+                          {isLoading ? t("signup.registering") : t("signup.signup_button")}
+                        </Text>
                       </TouchableOpacity>
 
                       {/* زر العودة */}
@@ -691,6 +788,39 @@ const SignupScreen = () => {
                         <Text style={styles.errorText}>{errors.password}</Text>
                       )}
 
+                      {/* أضف هذا الحقل بعد حقل كلمة المرور في كلا من قسم المستخدم والشركة */}
+
+                      {/* تأكيد كلمة المرور */}
+                      <View
+                        style={[
+                          styles.inputContainer,
+                          isRTL && { flexDirection: "row-reverse" },
+                        ]}
+                      >
+                        <Ionicons name="lock-closed-outline" size={20} color="#333" />
+                        <TextInput
+                          style={[styles.input, isRTL && { textAlign: "right" }]}
+                          placeholder={t("signup.confirm_password")}
+                          onChangeText={handleChange("confirmPassword")}
+                          onBlur={handleBlur("confirmPassword")}
+                          value={values.confirmPassword}
+                          secureTextEntry={!showConfirmPassword}
+                          autoCapitalize="none"
+                        />
+                        <TouchableOpacity
+                          onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                          style={styles.eyeIconContainer}
+                        >
+                          <Ionicons
+                            name={showConfirmPassword ? "eye-outline" : "eye-off-outline"}
+                            size={20}
+                            color="#333"
+                          />
+                        </TouchableOpacity>
+                      </View>
+                      {touched.confirmPassword && errors.confirmPassword && (
+                        <Text style={styles.errorText}>{errors.confirmPassword}</Text>
+                      )}
 
                       {/* الهاتف */}
                       <View
@@ -716,11 +846,13 @@ const SignupScreen = () => {
                      
                       {/* زر التسجيل */}
                       <TouchableOpacity
-                        style={styles.signupButton}
+                        style={[styles.signupButton, isLoading && styles.disabledButton]}
                         onPress={() => handleSubmit()}
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || isLoading}
                       >
-                        <Text style={styles.signupButtonText}>{t("signup.signup_button")}</Text>
+                        <Text style={styles.signupButtonText}>
+                          {isLoading ? t("signup.registering") : t("signup.signup_button")}
+                        </Text>
                       </TouchableOpacity>
                     </>
                   )}
@@ -999,5 +1131,9 @@ const styles = StyleSheet.create({
   removeIcon: {
     fontSize: 18,
     color: "red",
+  },
+  disabledButton: {
+    backgroundColor: "#ccc",
+    opacity: 0.7,
   },
 });
