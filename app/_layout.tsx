@@ -8,6 +8,8 @@ import { LanguageProvider } from '../src/context/LanguageContext';
 import { ShopProvider } from '@/src/context/ShopContext';
 import Toast from 'react-native-toast-message';
 import '../src/config/i18n';
+import { Provider } from 'react-redux';
+import { store } from '../src/store/store';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -28,16 +30,18 @@ export default function RootLayout() {
     }
 
     return (
-        <ShopProvider>
-            <LanguageProvider>
-                <Stack screenOptions={{headerShown: false}}>
-                    <Stack.Screen name="index" options={{ headerShown: false }} />
-                    <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                    <Stack.Screen name="signin" options={{ presentation: 'modal' }} />
-                    <Stack.Screen name="signup" options={{ presentation: 'modal' }} />
-                </Stack>
-            </LanguageProvider>
-            <Toast />
-        </ShopProvider>
+        <Provider store={store}>
+            <ShopProvider>
+                <LanguageProvider>
+                    <Stack screenOptions={{headerShown: false}}>
+                        <Stack.Screen name="index" options={{ headerShown: false }} />
+                        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                        <Stack.Screen name="signin" options={{ presentation: 'modal' }} />
+                        <Stack.Screen name="signup" options={{ presentation: 'modal' }} />
+                    </Stack>
+                </LanguageProvider>
+                <Toast />
+            </ShopProvider>
+        </Provider>
     );
 }

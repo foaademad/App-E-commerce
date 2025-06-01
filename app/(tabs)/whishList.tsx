@@ -27,6 +27,14 @@ const WishlistScreen = () => {
       reviews: 189,
       products: 98,
     },
+    {
+      id: '3',
+      name: 'Tech Zone',
+      image: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18e2?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8dGVjaHxlbnwwfHwwfHx8MA%3D%3D',
+      rating: 4.9,
+      reviews: 320,
+      products: 210,
+    },
   ];
 
   const renderFavoriteItems = () => (
