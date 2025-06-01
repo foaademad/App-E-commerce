@@ -192,8 +192,67 @@ const SignupScreen = () => {
     }
   };
 
+  // const handleSubmit = async (values: FormValues, { setSubmitting }: any) => {
+  //   try {
+  //     const registerData = {
+  //       Password: values.password,
+  //       ConfirmPassword: values.confirmPassword,
+  //       IsCompanyOrShop: accountType === "company",
+  //       Location: values.address || "",
+  //       Email: values.email,
+  //       FullName: accountType === "company" ? values.companyName : values.username,
+  //       PhoneNumber: values.Phone,
+  //       IsCompany: businessType === "company",
+  //       IsMarketer: userType === "marketer",
+  //       CreatedAt: new Date().toISOString(),
+  //       CommercialRegister: {
+  //         uri: imageUri || "",
+  //         name: imageName || "commercial_register.jpg",
+  //         type: "image/jpeg"
+  //       }
+  //     };
+
+  //     console.log('Submitting registration data:', registerData); // Debug log
+
+  //     const result = await dispatch(register(registerData)).unwrap();
+  //     console.log('Registration result:', result); // Debug log
+      
+  //     if (result) {
+  //       Alert.alert(
+  //         t("signup.success"),
+  //         t("signup.registration_successful"),
+  //         [
+  //           {
+  //             text: "OK",
+  //             onPress: () => router.push({ pathname: "/signin" })
+  //           }
+  //         ]
+  //       );
+  //     }
+  //   } catch (error: any) {
+  //     console.error('Registration error:', error); // Debug log
+  //     Alert.alert(
+  //       t("signup.error"),
+  //       error.message || t("signup.registration_failed")
+  //     );
+  //   } finally {
+  //     setSubmitting(false);
+  //   }
+  // };
+
+
   const handleSubmit = async (values: FormValues, { setSubmitting }: any) => {
     try {
+      // التأكد من وجود كلمة المرور المؤكدة
+      if (values.password !== values.confirmPassword) {
+        Alert.alert(
+          t("signup.error"),
+          t("signup.passwords_must_match")
+        );
+        setSubmitting(false);
+        return;
+      }
+  
       const registerData = {
         Password: values.password,
         ConfirmPassword: values.confirmPassword,
@@ -205,45 +264,65 @@ const SignupScreen = () => {
         IsCompany: businessType === "company",
         IsMarketer: userType === "marketer",
         CreatedAt: new Date().toISOString(),
-        CommercialRegister: {
-          uri: imageUri || "",
+        CommercialRegister: (accountType === "company" && businessType === "company" && imageUri) ? {
+          uri: imageUri,
           name: imageName || "commercial_register.jpg",
           type: "image/jpeg"
-        }
+        } : null
       };
-
-      console.log('Submitting registration data:', registerData); // Debug log
-
-      const result = await dispatch(register(registerData)).unwrap();
-      console.log('Registration result:', result); // Debug log
+  
+      console.log('Sending registration data:', registerData);
+  
+      const result = await dispatch(register(registerData as any)).unwrap();
+      console.log('Registration result:', result);
       
-      if (result) {
+      // التحقق من نجاح التسجيل
+      if (result && (result.success || result.message === "تم التسجيل بنجاح" || result.token)) {
         Alert.alert(
           t("signup.success"),
-          t("signup.registration_successful"),
+          result.message || t("signup.registration_successful"),
           [
             {
               text: "OK",
-              onPress: () => router.push({ pathname: "/signin" })
+              onPress: () => {
+                // إذا كان هناك token، انتقل للصفحة الرئيسية، وإلا انتقل لصفحة تسجيل الدخول
+                if (result.token) {
+                  router.push({ pathname: "/" }); // أو الصفحة الرئيسية
+                } else {
+                  router.push({ pathname: "/signin" });
+                }
+              }
             }
           ]
         );
+      } else {
+        throw new Error(result?.message || "Registration failed");
       }
     } catch (error: any) {
-      console.error('Registration error:', error); // Debug log
+      console.error('Registration error:', error);
+      
+      let errorMessage = t("signup.registration_failed");
+      
+      // تحسين عرض رسائل الخطأ
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
       Alert.alert(
         t("signup.error"),
-        error.message || t("signup.registration_failed")
+        errorMessage
       );
     } finally {
       setSubmitting(false);
     }
   };
-
   const pickImage = async (handleChange: (field: string, value: any) => void) => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        // mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         allowsEditing: true,
         aspect: [4, 3],
         quality: 0.8,
@@ -550,6 +629,27 @@ const SignupScreen = () => {
                   {/* الخطوة الثانية */}
                   {accountType === "company" && step === 2 && (
                     <>
+                      {/* الهاتف */}
+                      <View
+                        style={[
+                          styles.inputContainer,
+                          isRTL && { flexDirection: "row-reverse" },
+                        ]}
+                      >
+                        <Ionicons name="phone-portrait-outline" size={20} color="#333" />
+                        <TextInput
+                          style={[styles.input, isRTL && { textAlign: "right" }]}
+                          placeholder={t("signup.Phone")}
+                          onChangeText={handleChange("Phone")}
+                          onBlur={handleBlur("Phone")}
+                          value={values.Phone}
+                          keyboardType="phone-pad"
+                        />
+                      </View>
+                      {touched.Phone && errors.Phone && (
+                        <Text style={styles.errorText}>{errors.Phone}</Text>
+                      )}
+                      
                       {/* العنوان */}
                       <View
                         style={[
