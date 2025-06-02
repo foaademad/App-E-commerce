@@ -192,53 +192,7 @@ const SignupScreen = () => {
     }
   };
 
-  // const handleSubmit = async (values: FormValues, { setSubmitting }: any) => {
-  //   try {
-  //     const registerData = {
-  //       Password: values.password,
-  //       ConfirmPassword: values.confirmPassword,
-  //       IsCompanyOrShop: accountType === "company",
-  //       Location: values.address || "",
-  //       Email: values.email,
-  //       FullName: accountType === "company" ? values.companyName : values.username,
-  //       PhoneNumber: values.Phone,
-  //       IsCompany: businessType === "company",
-  //       IsMarketer: userType === "marketer",
-  //       CreatedAt: new Date().toISOString(),
-  //       CommercialRegister: {
-  //         uri: imageUri || "",
-  //         name: imageName || "commercial_register.jpg",
-  //         type: "image/jpeg"
-  //       }
-  //     };
 
-  //     console.log('Submitting registration data:', registerData); // Debug log
-
-  //     const result = await dispatch(register(registerData)).unwrap();
-  //     console.log('Registration result:', result); // Debug log
-      
-  //     if (result) {
-  //       Alert.alert(
-  //         t("signup.success"),
-  //         t("signup.registration_successful"),
-  //         [
-  //           {
-  //             text: "OK",
-  //             onPress: () => router.push({ pathname: "/signin" })
-  //           }
-  //         ]
-  //       );
-  //     }
-  //   } catch (error: any) {
-  //     console.error('Registration error:', error); // Debug log
-  //     Alert.alert(
-  //       t("signup.error"),
-  //       error.message || t("signup.registration_failed")
-  //     );
-  //   } finally {
-  //     setSubmitting(false);
-  //   }
-  // };
 
 
   const handleSubmit = async (values: FormValues, { setSubmitting }: any) => {
@@ -649,7 +603,7 @@ const SignupScreen = () => {
                       {touched.Phone && errors.Phone && (
                         <Text style={styles.errorText}>{errors.Phone}</Text>
                       )}
-                      
+
                       {/* العنوان */}
                       <View
                         style={[

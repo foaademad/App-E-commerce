@@ -44,7 +44,7 @@ export const login = createAsyncThunk(
   ) => {
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/Account/login",
+        "https://df8f-156-217-82-33.ngrok-free.app/api/Account/login",
         credentials
       );
       await Keychain.setGenericPassword("token", response.data.token);
@@ -54,77 +54,6 @@ export const login = createAsyncThunk(
     }
   }
 );
-
-// // التسجيل
-// export const register = createAsyncThunk(
-//   "auth/register",
-//   async (
-//     credentials: {
-//       Password: string;
-//       ConfirmPassword: string;
-//       IsCompanyOrShop: boolean;
-//       Location: string;
-//       Email: string;
-//       FullName: string;
-//       PhoneNumber: string;
-//       IsCompany: boolean;
-//       IsMarketer: boolean;
-//       CreatedAt: string;
-//       CommercialRegister: FileData;
-//     },
-//     { rejectWithValue }
-//   ) => {
-//     try {
-//       const formData = new FormData();
-
-//       // Add text fields
-//       formData.append("Password", credentials.Password);
-//       formData.append("ConfirmPassword", credentials.ConfirmPassword);
-//       formData.append("IsCompanyOrShop", String(credentials.IsCompanyOrShop));
-//       formData.append("Location", credentials.Location);
-//       formData.append("Email", credentials.Email);
-//       formData.append("FullName", credentials.FullName);
-//       formData.append("PhoneNumber", credentials.PhoneNumber);
-//       formData.append("IsCompany", String(credentials.IsCompany));
-//       formData.append("IsMarketer", String(credentials.IsMarketer));
-//       formData.append("CreatedAt", credentials.CreatedAt);
-
-//       // Add file only if it exists and has a URI
-//       if (credentials.CommercialRegister && credentials.CommercialRegister.uri) {
-//         formData.append("CommercialRegister", {
-//           uri: credentials.CommercialRegister.uri,
-//           name: credentials.CommercialRegister.name,
-//           type: credentials.CommercialRegister.type || "image/jpeg",
-//         } as any);
-//       }
-
-//       console.log('Sending registration request with formData:', formData); // Debug log
-
-//       // Send request
-//       const response = await axios.post(
-//         "https://df8f-156-217-82-33.ngrok-free.app/api/Account/register",
-//         formData,
-//         {
-//           headers: {
-//             "Content-Type": "multipart/form-data",
-//             "Accept": "application/json",
-//           },
-//         }
-//       );
-
-//       console.log('Registration response:', response.data); // Debug log
-//       return response.data;
-//     } catch (error: any) {
-//       console.error('Registration error details:', error.response?.data || error.message); // Debug log
-//       return rejectWithValue(
-//         error.response?.data?.message || 
-//         error.response?.data?.error || 
-//         error.message || 
-//         "Registration failed"
-//       );
-//     }
-//   }
-// );
 
 // التسجيل المحسن
 export const register = createAsyncThunk(
