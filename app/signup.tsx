@@ -16,11 +16,12 @@ import {
   TouchableOpacity,
   View
 } from "react-native";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import * as Yup from "yup";
 import { useLanguage } from "../src/context/LanguageContext";
-import { register } from "../src/store/slice/authSlice";
-import { AppDispatch, RootState } from "../src/store/store";
+import { useAuth } from "../src/store/api/authApi";
+import { RootState } from "../src/store/store";
+import { CompanyDetails, UserRole } from "../src/store/utility/interfaces/authInterface";
 
 interface FormValues {
   username: string;
@@ -50,11 +51,44 @@ const RegularUserSchema = (t: any) =>
     confirmPassword: Yup.string()
       .oneOf([Yup.ref("password")], t("signup.passwords_must_match"))
       .required(t("signup.confirm_password_required")),
+    Phone: Yup.string().required(t("signup.Phone_required")),
   });
 
+// مخطط التحقق من صحة الإدخال باستخدام Yup للشركة
+const getCompanySchema = (t: any) => {
+  return Yup.object().shape({
+    companyName: Yup.string()
+      .min(3, t("signup.company_name_min"))
+      .required(t("signup.company_name_required")),
+    email: Yup.string()
+      .email(t("signup.email_invalid"))
+      .required(t("signup.email_required")),
+    password: Yup.string()
+      .min(6, t("signup.password_min"))
+      .required(t("signup.password_required")),
+    confirmPassword: Yup.string()
+      .oneOf([Yup.ref("password")], t("signup.passwords_must_match"))
+      .required(t("signup.confirm_password_required")),
+    address: Yup.string().required(t("signup.address_required")),
+    businessRegNumber: Yup.string().required(
+      t("signup.business_reg_number_required")
+    ),
+    Phone: Yup.string().required(t("signup.Phone_required")),
+    companyType: Yup.string().required(t("signup.company_type_required")),
+    companyImage: Yup.string().when('companyType', {
+      is: 'company',
+      then: (schema) => schema.required(t("signup.company_image_required")),
+      otherwise: (schema) => schema.notRequired(),
+    }),
+  });
+};
+
+const getValidationSchema = (t: any, accountType: string) => {
+  return accountType === "company" ? getCompanySchema(t) : RegularUserSchema(t);
+};
+
 const SignupScreen = () => {
-  const dispatch = useDispatch<AppDispatch>();
-  const { isLoading, error, registerSuccess } = useSelector((state: RootState) => state.auth);
+  const { loading, error, authModel } = useSelector((state: RootState) => state.auth);
   const { t } = useTranslation();
   const { language } = useLanguage();
   const [isRTL, setIsRTL] = useState(language === "ar");
@@ -67,55 +101,25 @@ const SignupScreen = () => {
   const router = useRouter();
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [imageName, setImageName] = useState<string | null>(null);
-  const [balls] = useState(() => Array(5).fill(0).map(() => ({
-    x: new Animated.Value(Math.random() * Dimensions.get('window').width),
-    y: new Animated.Value(Math.random() * Dimensions.get('window').height),
-    size: Math.random() * 50 + 50,
-  })));
-
-  // مخطط التحقق من صحة الإدخال باستخدام Yup للشركة
-  const getCompanySchema = (t: any) => {
-    return Yup.object().shape({
-      companyName: Yup.string()
-        .min(3, t("signup.company_name_min"))
-        .required(t("signup.company_name_required")),
-      email: Yup.string()
-        .email(t("signup.email_invalid"))
-        .required(t("signup.email_required")),
-      password: Yup.string()
-        .min(6, t("signup.password_min"))
-        .required(t("signup.password_required")),
-      confirmPassword: Yup.string()
-        .oneOf([Yup.ref("password")], t("signup.passwords_must_match"))
-        .required(t("signup.confirm_password_required")),
-      address: Yup.string().required(t("signup.address_required")),
-      businessRegNumber: Yup.string().required(
-        t("signup.business_reg_number_required")
-      ),
-      Phone: Yup.string().required(t("signup.Phone_required")),
-      companyType: Yup.string().required(t("signup.company_type_required")),
-      companyImage: Yup.string().when('companyType', {
-        is: 'company',
-        then: schema => schema.test('has-image', t("signup.company_image_required"), function() {
-          return imageUri !== null;
-        }),
-        otherwise: schema => schema.notRequired(),
-      }),
-    });
-  };
-
-  const getValidationSchema = (t: any) => {
-    return accountType === "company" ? getCompanySchema(t) : RegularUserSchema(t);
-  };
+  const { registerUser } = useAuth(); // استخدام useAuth
+  const [balls] = useState(() =>
+    Array(5)
+      .fill(0)
+      .map(() => ({
+        x: new Animated.Value(Math.random() * Dimensions.get('window').width),
+        y: new Animated.Value(Math.random() * Dimensions.get('window').height),
+        size: Math.random() * 50 + 50,
+      }))
+  );
 
   useEffect(() => {
     setIsRTL(language === "ar");
   }, [language]);
 
-  //to animate the balls
+  // تحريك الكرات
   useEffect(() => {
     const animateBalls = () => {
-      const animations = balls.map(ball => {
+      const animations = balls.map((ball) => {
         return Animated.parallel([
           Animated.sequence([
             Animated.timing(ball.x, {
@@ -146,8 +150,9 @@ const SignupScreen = () => {
       Animated.parallel(animations).start(() => animateBalls());
     };
     animateBalls();
-  }, []);
+  }, [balls]);
 
+  // طلب إذن المعرض
   useEffect(() => {
     (async () => {
       if (Platform.OS !== 'web') {
@@ -160,7 +165,7 @@ const SignupScreen = () => {
         }
       }
     })();
-  }, []);
+  }, [t]);
 
   const getInitialValues = (): FormValues => {
     if (accountType === "company") {
@@ -192,91 +197,76 @@ const SignupScreen = () => {
     }
   };
 
-
-
-
   const handleSubmit = async (values: FormValues, { setSubmitting }: any) => {
     try {
-      // التأكد من وجود كلمة المرور المؤكدة
+      // التحقق من تطابق كلمة المرور
       if (values.password !== values.confirmPassword) {
-        Alert.alert(
-          t("signup.error"),
-          t("signup.passwords_must_match")
-        );
+        Alert.alert(t("signup.error"), t("signup.passwords_must_match"));
         setSubmitting(false);
         return;
       }
-  
-      const registerData = {
-        Password: values.password,
-        ConfirmPassword: values.confirmPassword,
-        IsCompanyOrShop: accountType === "company",
-        Location: values.address || "",
-        Email: values.email,
-        FullName: accountType === "company" ? values.companyName : values.username,
-        PhoneNumber: values.Phone,
-        IsCompany: businessType === "company",
-        IsMarketer: userType === "marketer",
-        CreatedAt: new Date().toISOString(),
-        CommercialRegister: (accountType === "company" && businessType === "company" && imageUri) ? {
-          uri: imageUri,
-          name: imageName || "commercial_register.jpg",
-          type: "image/jpeg"
-        } : null
-      };
-  
-      console.log('Sending registration data:', registerData);
-  
-      const result = await dispatch(register(registerData as any)).unwrap();
-      console.log('Registration result:', result);
-      
+
+      // تحديد الدور (role) بناءً على نوع الحساب ونوع المستخدم
+      const role: UserRole = accountType === "company" ? "company" : userType === "marketer" ? "marketer" : "user";
+
+      // إعداد بيانات companyDetails إذا كان نوع الحساب هو "company"
+      const companyDetails : CompanyDetails | undefined =
+        accountType === "company"
+          ? {
+              address: values.address,
+              businessRegNumber: values.businessRegNumber,
+              companyImage: imageUri
+                ? {
+                    uri: imageUri,
+                    name: imageName || "commercial_register.jpg",
+                    type: "image/jpeg",
+                  }
+                : undefined,
+            }
+          : undefined;
+
+      // إعداد البيانات لإرسالها إلى registerUser
+      const name = accountType === "company" ? values.companyName : values.username;
+
+      // استدعاء registerUser من useAuth
+      const result = await registerUser(
+        values.email,
+        values.password,
+        name,
+        role,
+        companyDetails
+      );
+
       // التحقق من نجاح التسجيل
-      if (result && (result.success || result.message === "تم التسجيل بنجاح" || result.token)) {
+      if (result.isAuthenticated) {
         Alert.alert(
           t("signup.success"),
-          result.message || t("signup.registration_successful"),
+          t("signup.registration_successful"),
           [
             {
               text: "OK",
               onPress: () => {
-                // إذا كان هناك token، انتقل للصفحة الرئيسية، وإلا انتقل لصفحة تسجيل الدخول
-                if (result.token) {
-                  router.push({ pathname: "/" }); // أو الصفحة الرئيسية
-                } else {
-                  router.push({ pathname: "/signin" });
-                }
-              }
-            }
+                router.push({ pathname: "/signin" });
+              },
+            },
           ]
         );
       } else {
-        throw new Error(result?.message || "Registration failed");
+        throw new Error(t("signup.registration_failed"));
       }
     } catch (error: any) {
       console.error('Registration error:', error);
-      
-      let errorMessage = t("signup.registration_failed");
-      
-      // تحسين عرض رسائل الخطأ
-      if (error.message) {
-        errorMessage = error.message;
-      } else if (typeof error === 'string') {
-        errorMessage = error;
-      }
-      
-      Alert.alert(
-        t("signup.error"),
-        errorMessage
-      );
+      const errorMessage = error.message || t("signup.registration_failed");
+      Alert.alert(t("signup.error"), errorMessage);
     } finally {
       setSubmitting(false);
     }
   };
+
   const pickImage = async (handleChange: (field: string, value: any) => void) => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        // mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        mediaTypes: ['images'],
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [4, 3],
         quality: 0.8,
@@ -299,7 +289,7 @@ const SignupScreen = () => {
     handleChange("companyImage", "");
   };
 
-  const handleChange = (field: string) => (value: any) => {
+  const handleChangeType = (field: string) => (value: any) => {
     if (field === "companyType") {
       setBusinessType(value);
     }
@@ -321,10 +311,7 @@ const SignupScreen = () => {
                 {
                   width: ball.size,
                   height: ball.size,
-                  transform: [
-                    { translateX: ball.x },
-                    { translateY: ball.y },
-                  ],
+                  transform: [{ translateX: ball.x }, { translateY: ball.y }],
                   backgroundColor: `rgba(54, 199, 246, ${0.1 + index * 0.1})`,
                 },
               ]}
@@ -426,7 +413,7 @@ const SignupScreen = () => {
 
             <Formik<FormValues>
               initialValues={getInitialValues()}
-              validationSchema={getValidationSchema(t)}
+              validationSchema={getValidationSchema(t, accountType)}
               onSubmit={handleSubmit}
               enableReinitialize
             >
@@ -439,24 +426,15 @@ const SignupScreen = () => {
                 touched,
                 isSubmitting,
               }) => (
-                <View
-                  style={[styles.form, isRTL && { alignItems: "flex-end" }]}
-                >
+                <View style={[styles.form, isRTL && { alignItems: "flex-end" }]}>
                   {/* مؤشر التقدم فقط لحساب الشركة */}
                   {accountType === "company" && (
                     <View style={styles.progressBarContainer}>
                       <View
-                        style={[
-                          styles.progressBar,
-                          {
-                            width: `${step === 1 ? 50 : 100}%`,
-                          },
-                        ]}
+                        style={[styles.progressBar, { width: `${step === 1 ? 50 : 100}%` }]}
                       />
                       <Text style={styles.progressLabel}>
-                        {step === 1
-                          ? t("signup.step_1_of_2")
-                          : t("signup.step_2_of_2")}
+                        {step === 1 ? t("signup.step_1_of_2") : t("signup.step_2_of_2")}
                       </Text>
                     </View>
                   )}
@@ -466,10 +444,7 @@ const SignupScreen = () => {
                     <>
                       {/* اسم الشركة */}
                       <View
-                        style={[
-                          styles.inputContainer,
-                          isRTL && { flexDirection: "row-reverse" },
-                        ]}
+                        style={[styles.inputContainer, isRTL && { flexDirection: "row-reverse" }]}
                       >
                         <Ionicons name="business-outline" size={20} color="#333" />
                         <TextInput
@@ -486,10 +461,7 @@ const SignupScreen = () => {
 
                       {/* البريد الإلكتروني */}
                       <View
-                        style={[
-                          styles.inputContainer,
-                          isRTL && { flexDirection: "row-reverse" },
-                        ]}
+                        style={[styles.inputContainer, isRTL && { flexDirection: "row-reverse" }]}
                       >
                         <Ionicons name="mail-outline" size={20} color="#333" />
                         <TextInput
@@ -508,10 +480,7 @@ const SignupScreen = () => {
 
                       {/* كلمة المرور */}
                       <View
-                        style={[
-                          styles.inputContainer,
-                          isRTL && { flexDirection: "row-reverse" },
-                        ]}
+                        style={[styles.inputContainer, isRTL && { flexDirection: "row-reverse" }]}
                       >
                         <Ionicons name="lock-closed-outline" size={20} color="#333" />
                         <TextInput
@@ -540,10 +509,7 @@ const SignupScreen = () => {
 
                       {/* تأكيد كلمة المرور */}
                       <View
-                        style={[
-                          styles.inputContainer,
-                          isRTL && { flexDirection: "row-reverse" },
-                        ]}
+                        style={[styles.inputContainer, isRTL && { flexDirection: "row-reverse" }]}
                       >
                         <Ionicons name="lock-closed-outline" size={20} color="#333" />
                         <TextInput
@@ -585,10 +551,7 @@ const SignupScreen = () => {
                     <>
                       {/* الهاتف */}
                       <View
-                        style={[
-                          styles.inputContainer,
-                          isRTL && { flexDirection: "row-reverse" },
-                        ]}
+                        style={[styles.inputContainer, isRTL && { flexDirection: "row-reverse" }]}
                       >
                         <Ionicons name="phone-portrait-outline" size={20} color="#333" />
                         <TextInput
@@ -606,10 +569,7 @@ const SignupScreen = () => {
 
                       {/* العنوان */}
                       <View
-                        style={[
-                          styles.inputContainer,
-                          isRTL && { flexDirection: "row-reverse" },
-                        ]}
+                        style={[styles.inputContainer, isRTL && { flexDirection: "row-reverse" }]}
                       >
                         <Ionicons name="location-outline" size={20} color="#333" />
                         <TextInput
@@ -626,10 +586,7 @@ const SignupScreen = () => {
 
                       {/* رقم السجل التجاري */}
                       <View
-                        style={[
-                          styles.inputContainer,
-                          isRTL && { flexDirection: "row-reverse" },
-                        ]}
+                        style={[styles.inputContainer, isRTL && { flexDirection: "row-reverse" }]}
                       >
                         <Ionicons name="barcode-outline" size={20} color="#333" />
                         <TextInput
@@ -658,7 +615,7 @@ const SignupScreen = () => {
                             ]}
                             onPress={() => {
                               setBusinessType("store");
-                              handleChange("companyType")("store");
+                              handleChangeType("companyType")("store");
                             }}
                           >
                             <Ionicons
@@ -682,7 +639,7 @@ const SignupScreen = () => {
                             ]}
                             onPress={() => {
                               setBusinessType("company");
-                              handleChange("companyType")("company");
+                              handleChangeType("companyType")("company");
                             }}
                           >
                             <Ionicons
@@ -705,13 +662,10 @@ const SignupScreen = () => {
                         <Text style={styles.errorText}>{errors.companyType}</Text>
                       )}
 
-                      {/* رفع الصورة (يظهر فقط إذا كان نوع الشركة هو شركة) */}
+                      {/* رفع الصورة */}
                       {businessType === "company" && (
                         <View
-                          style={[
-                            styles.inputContainer,
-                            isRTL && { flexDirection: "row-reverse" },
-                          ]}
+                          style={[styles.inputContainer, isRTL && { flexDirection: "row-reverse" }]}
                         >
                           <Ionicons name="image-outline" size={20} color="#333" />
                           <View style={styles.imageUploadRow}>
@@ -744,12 +698,12 @@ const SignupScreen = () => {
 
                       {/* زر إرسال النموذج */}
                       <TouchableOpacity
-                        style={[styles.signupButton, isLoading && styles.disabledButton]}
+                        style={[styles.signupButton, loading && styles.disabledButton]}
                         onPress={() => handleSubmit()}
-                        disabled={isSubmitting || isLoading}
+                        disabled={isSubmitting || loading}
                       >
                         <Text style={styles.signupButtonText}>
-                          {isLoading ? t("signup.registering") : t("signup.signup_button")}
+                          {loading ? t("signup.registering") : t("signup.signup_button")}
                         </Text>
                       </TouchableOpacity>
 
@@ -760,7 +714,6 @@ const SignupScreen = () => {
                       >
                         <Text style={styles.signupButtonText}>{t("signup.back")}</Text>
                       </TouchableOpacity>
-
                     </>
                   )}
 
@@ -769,10 +722,7 @@ const SignupScreen = () => {
                     <>
                       {/* اسم المستخدم */}
                       <View
-                        style={[
-                          styles.inputContainer,
-                          isRTL && { flexDirection: "row-reverse" },
-                        ]}
+                        style={[styles.inputContainer, isRTL && { flexDirection: "row-reverse" }]}
                       >
                         <Ionicons name="person-outline" size={20} color="#333" />
                         <TextInput
@@ -790,10 +740,7 @@ const SignupScreen = () => {
 
                       {/* البريد الإلكتروني */}
                       <View
-                        style={[
-                          styles.inputContainer,
-                          isRTL && { flexDirection: "row-reverse" },
-                        ]}
+                        style={[styles.inputContainer, isRTL && { flexDirection: "row-reverse" }]}
                       >
                         <Ionicons name="mail-outline" size={20} color="#333" />
                         <TextInput
@@ -812,10 +759,7 @@ const SignupScreen = () => {
 
                       {/* كلمة المرور */}
                       <View
-                        style={[
-                          styles.inputContainer,
-                          isRTL && { flexDirection: "row-reverse" },
-                        ]}
+                        style={[styles.inputContainer, isRTL && { flexDirection: "row-reverse" }]}
                       >
                         <Ionicons name="lock-closed-outline" size={20} color="#333" />
                         <TextInput
@@ -842,14 +786,9 @@ const SignupScreen = () => {
                         <Text style={styles.errorText}>{errors.password}</Text>
                       )}
 
-                      {/* أضف هذا الحقل بعد حقل كلمة المرور في كلا من قسم المستخدم والشركة */}
-
                       {/* تأكيد كلمة المرور */}
                       <View
-                        style={[
-                          styles.inputContainer,
-                          isRTL && { flexDirection: "row-reverse" },
-                        ]}
+                        style={[styles.inputContainer, isRTL && { flexDirection: "row-reverse" }]}
                       >
                         <Ionicons name="lock-closed-outline" size={20} color="#333" />
                         <TextInput
@@ -878,10 +817,7 @@ const SignupScreen = () => {
 
                       {/* الهاتف */}
                       <View
-                        style={[
-                          styles.inputContainer,
-                          isRTL && { flexDirection: "row-reverse" },
-                        ]}
+                        style={[styles.inputContainer, isRTL && { flexDirection: "row-reverse" }]}
                       >
                         <Ionicons name="phone-portrait-outline" size={20} color="#333" />
                         <TextInput
@@ -897,24 +833,21 @@ const SignupScreen = () => {
                         <Text style={styles.errorText}>{errors.Phone}</Text>
                       )}
 
-                     
                       {/* زر التسجيل */}
                       <TouchableOpacity
-                        style={[styles.signupButton, isLoading && styles.disabledButton]}
+                        style={[styles.signupButton, loading && styles.disabledButton]}
                         onPress={() => handleSubmit()}
-                        disabled={isSubmitting || isLoading}
+                        disabled={isSubmitting || loading}
                       >
                         <Text style={styles.signupButtonText}>
-                          {isLoading ? t("signup.registering") : t("signup.signup_button")}
+                          {loading ? t("signup.registering") : t("signup.signup_button")}
                         </Text>
                       </TouchableOpacity>
                     </>
                   )}
 
                   {/* رابط تسجيل الدخول */}
-                  <TouchableOpacity
-                    onPress={() => router.push({ pathname: "/signin" })}
-                  >
+                  <TouchableOpacity onPress={() => router.push({ pathname: "/signin" })}>
                     <Text style={styles.loginText}>
                       {t("signup.already_have_account")}
                       <Text style={styles.loginLink}> {t("signup.login")}</Text>
@@ -929,8 +862,6 @@ const SignupScreen = () => {
     </>
   );
 };
-
-export default SignupScreen;
 
 const styles = StyleSheet.create({
   scrollContainer: {
@@ -1106,17 +1037,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "500",
   },
-  imagePreviewContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  imagePreview: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: "#f0f0f0",
-  },
   companyTypeContainer: {
     marginBottom: 20,
   },
@@ -1191,3 +1111,5 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
 });
+
+export default SignupScreen;

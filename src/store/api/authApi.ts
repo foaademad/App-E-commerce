@@ -1,7 +1,7 @@
 import { useDispatch } from 'react-redux';
-import { login, loginWithFacebook, loginWithGoogle, register, resetPassword, setAuthData, setError, setLoading } from '../slice/authSlice';
+import { login, register, setAuthState, setError, setLoading } from '../slice/authSlice';
 import api from '../utility/api/api';
-import { CompanyDetails, UserRole } from '../utility/interfaces/authInterface';
+import { CompanyDetails, IAuthModel, UserRole } from '../utility/interfaces/authInterface';
 
 export const useAuth = () => {
   const dispatch = useDispatch();
@@ -10,107 +10,90 @@ export const useAuth = () => {
     try {
       dispatch(setLoading(true));
       dispatch(setError(null));
-      
+
       const response = await api.post("/Account/login", { email, password });
-      
+
       if (response.status === 200) {
+        const authData: IAuthModel = {
+          isAuthenticated: true,
+          user: {
+            id: response.data.id || "",
+            name: response.data.name || "",
+            email: response.data.email,
+            role: response.data.role || "user",
+            phoneNumber: response.data.phoneNumber,
+            isCompany: response.data.isCompany,
+            isMarketer: response.data.isMarketer,
+            createdAt: response.data.createdAt,
+            updatedAt: response.data.updatedAt,
+          },
+        };
         dispatch(login({ email, password }));
-        dispatch(setAuthData(response.data));
-        return response.data;
+        dispatch(setAuthState(authData));
+        return authData;
+      } else {
+        throw new Error("Login failed: Invalid response status");
       }
     } catch (error: any) {
-      dispatch(setError(error.message));
-      throw error;
+      const errorMessage = error.response?.data?.message || error.message || "Failed to login";
+      dispatch(setError(errorMessage));
+      throw new Error(errorMessage);
     } finally {
       dispatch(setLoading(false));
     }
   };
 
-  const registerUser = async (email: string, password: string, name: string, role: UserRole, companyDetails?: CompanyDetails) => {
+  const registerUser = async (
+    email: string,
+    password: string,
+    name: string,
+    role: UserRole,
+    companyDetails?: CompanyDetails
+  ) => {
     try {
       dispatch(setLoading(true));
       dispatch(setError(null));
-      
-      const response = await api.post("/Account/register", { email, password, name, role, companyDetails });
-      
+
+      const response = await api.post("/Account/register", {
+        email,
+        password,
+        name,
+        role,
+        companyDetails,
+      });
+
       if (response.status === 200) {
+        const authData: IAuthModel = {
+          isAuthenticated: true,
+          user: {
+            id: response.data.Id || "",
+            name: response.data.FullName || name,
+            email: response.data.Email || email,
+            role: response.data.role || role,
+            phoneNumber: response.data.PhoneNumber,
+            isCompany: response.data.IsComapny,
+            isMarketer: response.data.IsMarketer,
+            createdAt: response.data.CreatedAt,
+            updatedAt: response.data.UpdatedAt,
+          },
+        };
         dispatch(register({ email, password, name, role, companyDetails }));
-        return response.data;
+        dispatch(setAuthState(authData));
+        return authData;
+      } else {
+        throw new Error("Registration failed: Invalid response status");
       }
     } catch (error: any) {
-      dispatch(setError(error.message));
-      throw error;
+      const errorMessage = error.response?.data?.message || error.message || "Failed to register";
+      dispatch(setError(errorMessage));
+      throw new Error(errorMessage);
     } finally {
       dispatch(setLoading(false));
     }
   };
-
-  const loginWithGoogleUser = async (token: string) => {
-    try {
-      dispatch(setLoading(true));
-      dispatch(setError(null));
-      
-      const response = await api.post("/Account/google/signin", { token });
-      
-      if (response.status === 200) {
-        dispatch(loginWithGoogle({ token }));
-        return response.data;
-      }
-    } catch (error: any) {
-      dispatch(setError(error.message));
-      throw error;
-    } finally {
-      dispatch(setLoading(false));
-    }
-  };
-
-  const loginWithFacebookUser = async (token: string) => {
-    try {
-      dispatch(setLoading(true));
-      dispatch(setError(null));
-      
-      const response = await api.post("/Account/facebook/signin", { token });
-      
-      if (response.status === 200) {
-        dispatch(loginWithFacebook({ token }));
-        return response.data;
-      }
-    } catch (error: any) {
-      dispatch(setError(error.message));
-      throw error;
-    } finally {
-      dispatch(setLoading(false));
-    }
-  };
-
-
-
-  const resetPasswordUser = async (token: string, newPassword: string) => {
-    try {
-      dispatch(setLoading(true));
-      dispatch(setError(null));
-      
-      const response = await api.post("/Account/resetpassword", { token, newPassword });
-      
-      if (response.status === 200) {
-        dispatch(resetPassword({ token, newPassword }));
-        return response.data;
-      }
-    } catch (error: any) {
-      dispatch(setError(error.message));
-      throw error;
-    } finally {
-      dispatch(setLoading(false));
-    }
-  };
-
 
   return {
     loginUser,
     registerUser,
-    loginWithGoogleUser,
-    loginWithFacebookUser,
-
-    resetPasswordUser,
   };
-}; 
+};

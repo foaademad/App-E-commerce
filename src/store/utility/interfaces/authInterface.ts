@@ -13,26 +13,32 @@ export interface FileData {
   type?: string;
 }
 export interface CompanyDetails {
-  location: string;
-  businessRegFile: FileData | null;
+  address: string;
+  businessRegNumber: string;
+  companyImage?: {
+    uri: string;
+    name: string;
+    type: string;
+  };
 }
 
 // =-===============================================
 
 
 export interface IAuthModel {
-  message: string | null;
-  fullName: string | null;
-  isSuccess: boolean;
   isAuthenticated: boolean;
-  username: string | null;
-  email: string | null;
-  roles: string[];
-  token: string | null;
-  accessTokenExpiresOn: Date | null;
-  refreshToken: string | null;
-  userId: string | null;
-  refreshTokenExpiresOn: Date | null;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    role: UserRole;
+    avatar?: string;
+    phoneNumber?: string;
+    isCompany?: boolean;
+    isMarketer?: boolean;
+    createdAt?: string;
+    updatedAt?: string;
+  } | null;
 }
 
 export interface IAuthState {
