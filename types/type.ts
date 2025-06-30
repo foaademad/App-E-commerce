@@ -36,14 +36,6 @@ export interface NotificationType {
 
 //===============================================================
 
-export type UserRole = "user" | "marketer" | "company" ;
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: UserRole;
-  avatar?: string;
-}
 
 export interface WishlistItem {
   id: string;

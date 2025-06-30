@@ -1,317 +1,96 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
-import * as Keychain from "react-native-keychain";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import cookie from "react-cookies";
+import { CompanyDetails, UserRole } from "../utility/interfaces/authInterface";
 
-// Types
-interface User {
-  id: string;
-  email: string;
-  name: string;
+interface IAuthModel {
+  isAuthenticated: boolean;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    role: UserRole;
+    avatar?: string;
+  } | null;
+
+  login: (email: string, password: string) => Promise<boolean>;
+  register: (
+    email: string,
+    password: string,
+    name: string,
+    role: UserRole,
+    companyDetails?: CompanyDetails
+  ) => Promise<boolean>;
+  logout: () => void;
+  loginWithGoogle: (token: string) => Promise<boolean>;
+  loginWithFacebook: () => Promise<boolean>;
+  requestPasswordReset: (email: string) => Promise<boolean>;
+  resetPassword: (token: string, newPassword: string) => Promise<boolean>;
+  resendConfirmationEmail: (email: string) => Promise<boolean>;
 }
 
-interface FileData {
-  uri?: string; // جعله خيارياً لتجنب الأخطاء
-  name: string;
-  type?: string;
-}
+
+const authModel = cookie.load("authModelAdmin");
 
 interface AuthState {
-  user: User | null;
-  token: string | null;
-  isLoading: boolean;
-  isAuthenticated: boolean;
-  error: string | null;
-  registerSuccess: boolean;
+    loading: boolean;
+    error: string | null;
+    authModel: IAuthModel | null;
 }
 
 const initialState: AuthState = {
-  user: null,
-  token: null,
-  isLoading: false,
-  isAuthenticated: false,
-  error: null,
-  registerSuccess: false,
-};
+   loading: false,
+   error: null,
+   authModel: authModel,
+}
 
-// Async Thunks
-
-// تسجيل الدخول
-export const login = createAsyncThunk(
-  "auth/login",
-  async (
-    credentials: { email: string; password: string },
-    { rejectWithValue }
-  ) => {
-    try {
-      const response = await axios.post(
-        "https://df8f-156-217-82-33.ngrok-free.app/api/Account/login",
-        credentials
-      );
-      await Keychain.setGenericPassword("token", response.data.token);
-      return response.data;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || "Login failed");
-    }
-  }
-);
-
-// التسجيل المحسن
-export const register = createAsyncThunk(
-    "auth/register",
-    async (
-      credentials: {
-        Password: string;
-        ConfirmPassword: string;
-        IsCompanyOrShop: boolean;
-        Location: string;
-        Email: string;
-        FullName: string;
-        PhoneNumber: string;
-        IsCompany: boolean;
-        IsMarketer: boolean;
-        CreatedAt: string;
-        CommercialRegister: FileData | null;
-      },
-      { rejectWithValue }
-    ) => {
-      try {
-        const formData = new FormData();
-  
-        // إضافة الحقول النصية
-        formData.append("Password", credentials.Password);
-        formData.append("ConfirmPassword", credentials.ConfirmPassword);
-        formData.append("IsCompanyOrShop", String(credentials.IsCompanyOrShop));
-        formData.append("Location", credentials.Location);
-        formData.append("Email", credentials.Email);
-        formData.append("FullName", credentials.FullName);
-        formData.append("PhoneNumber", credentials.PhoneNumber);
-        formData.append("IsCompany", String(credentials.IsCompany));
-        formData.append("IsMarketer", String(credentials.IsMarketer));
-        formData.append("CreatedAt", credentials.CreatedAt);
-  
-        // إضافة الملف فقط إذا كان موجوداً
-        if (credentials.CommercialRegister && credentials.CommercialRegister.uri) {
-          formData.append("CommercialRegister", {
-            uri: credentials.CommercialRegister.uri,
-            name: credentials.CommercialRegister.name,
-            type: credentials.CommercialRegister.type || "image/jpeg",
-          } as any);
-        }
-  
-        console.log('sending registration request...');
-  
-        // إرسال الطلب
-        const response = await axios.post(
-          "https://df8f-156-217-82-33.ngrok-free.app/api/Account/register",
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-              "Accept": "application/json",
-            },
-            timeout: 30000, // 30 ثانية timeout
-          }
-        );
-  
-        console.log('registration response:', response.data);
-        
-        // حفظ الـ token إذا كان موجوداً في الاستجابة
-        if (response.data.token) {
-          await Keychain.setGenericPassword("token", response.data.token);
-        }
-        
-        return response.data;
-      } catch (error: any) {
-        console.error('registration error details:', error);
-        
-        // معالجة أفضل للأخطاء
-        let errorMessage = "Registration failed";
-        
-        if (error.response) {
-          // server error
-          errorMessage = error.response.data?.message || 
-                       error.response.data?.error || 
-                       error.response.data?.errors?.[0] ||
-                       `server error: ${error.response.status}`;
-        } else if (error.request) {
-          // no response from the server
-          errorMessage = "Cannot connect to the server. Check your connection.";
-        } else if (error.code === 'ECONNABORTED') {
-          // timeout
-          errorMessage = "Connection timeout. Please try again.";
-        } else {
-          // other error
-          errorMessage = error.message || "An unexpected error occurred";
-        }
-        
-        return rejectWithValue(errorMessage);
-      }
-    }
-  );
-
-
-// تسجيل الخروج
-export const logout = createAsyncThunk(
-  "auth/logout",
-  async (_, { rejectWithValue }) => {
-    try {
-      await Keychain.resetGenericPassword();
-      return { success: true };
-    } catch (error: any) {
-      return rejectWithValue(error.message);
-    }
-  }
-);
-
-// جلب التوكن من الـ Keychain
-export const getToken = createAsyncThunk(
-  "auth/getToken",
-  async (_, { rejectWithValue }) => {
-    try {
-      const credentials = await Keychain.getGenericPassword();
-      if (credentials) {
-        return { token: credentials.password };
-      }
-      return rejectWithValue("No token found");
-    } catch (error: any) {
-      return rejectWithValue(error.message);
-    }
-  }
-);
-
-// Slice
 const authSlice = createSlice({
-  name: "auth",
-  initialState,
-  reducers: {
-    setUser: (state, action) => {
-      state.user = action.payload;
-    },
-    setToken: (state, action) => {
-      state.token = action.payload;
-    },
-    setIsAuthenticated: (state, action) => {
-      state.isAuthenticated = action.payload;
-    },
-    setIsLoading: (state, action) => {
-      state.isLoading = action.payload;
-    },
-    setError: (state, action) => {
-      state.error = action.payload;
-    },
-    logoutUser: (state) => {
-      state.user = null;
-      state.token = null;
-      state.error = null;
-    },
-    registerUser: (state) => {
-      state.registerSuccess = true;
-    },
-  },
-  extraReducers: (builder) => {
-    builder
+    name: "auth",
+    initialState,
+    reducers: {
+        setAuthState: (state, action: PayloadAction<IAuthModel>) => {
+            state.loading = action.payload.isAuthenticated;
+            state.error = action.payload.user?.name || null;
+            state.authModel = action.payload;
+        },
+        setLoading: (state, action: PayloadAction<boolean>) => {
+            state.loading = action.payload;
+        },
+        setError: (state, action: PayloadAction<string | null>) => {
+            state.error = action.payload;
+        },
+        logout: (state) => {
+            state.authModel = null;
 
-    
+        },
+        login: (state, action: PayloadAction<{ email: string; password: string }>) => {
+            state.loading = true;
+            state.error = null;
+
+        },
+        register: (state, action: PayloadAction<{ email: string; password: string; name: string; role: UserRole; companyDetails?: CompanyDetails }>) => {
+            state.loading = true;
+            state.error = null;
+        },
+        loginWithGoogle: (state, action: PayloadAction<{ token: string }>) => {
+            state.loading = true;
+            state.error = null;
+        },
+        loginWithFacebook: (state, action: PayloadAction<{ token: string }>) => {
+            state.loading = true;
+            state.error = null;
+        },
+          
+        resetPassword: (state, action: PayloadAction<{ token: string; newPassword: string }>) => {
+            state.loading = true;
+            state.error = null;
+        },
       
-
-    // ===========================================================================
-      // Login
-      .addCase(login.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(login.fulfilled, (state, action) => {
-        state.isLoading = false;
-        
-        // تحقق من وجود البيانات المطلوبة
-        if (action.payload && action.payload.token) {
-          state.token = action.payload.token;
-          state.user = action.payload.user || null;
-          state.isAuthenticated = true;
-          state.error = null;
-        } else {
-          state.error = "Invalid response from server";
-          state.isAuthenticated = false;
+        setAuthData: (state, action: PayloadAction<IAuthModel>) => {
+            state.authModel = action.payload;
+            state.loading = false;
         }
-      })
-      .addCase(login.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload as string;
-        state.isAuthenticated = false;
-        state.user = null;
-        state.token = null;
-      })
-//   =================================================================
-      // Logout
-      .addCase(logout.pending, (state) => {
-        state.isLoading = true;
-      })
-      .addCase(logout.fulfilled, (state) => {
-        state.isLoading = false;
-        state.user = null;
-        state.token = null;
-        state.isAuthenticated = false;
-      })
-      .addCase(logout.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload as string;
-      })
-
-      // Get Token
-      .addCase(getToken.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(getToken.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.token = action.payload.token;
-        state.isAuthenticated = true;
-      })
-      .addCase(getToken.rejected, (state, action) => {
-        state.isLoading = false;
-        state.isAuthenticated = false;
-        state.error = action.payload as string;
-      })
-// ============================================
-      // Register
-      .addCase(register.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-        state.registerSuccess = false;
-      })
-      .addCase(register.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.registerSuccess = true;
-        
-        // إذا كانت الاستجابة تحتوي على token وuser، قم بتسجيل الدخول مباشرة
-        if (action.payload && action.payload.token && action.payload.user) {
-          state.token = action.payload.token;
-          state.user = action.payload.user;
-          state.isAuthenticated = true;
-        } else {
-          // إذا كان التسجيل ناجحاً لكن بدون تسجيل دخول مباشر
-          state.isAuthenticated = false;
-        }
-        state.error = null;
-      })
-      .addCase(register.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload as string;
-        state.isAuthenticated = false;
-        state.registerSuccess = false;
-      })
-  },
+    }
 });
 
-// Exports
-export const {
-  setUser,
-  setToken,
-  setIsAuthenticated,
-  setIsLoading,
-  setError,
-  logoutUser,
-  registerUser,
-} = authSlice.actions;
-
+export const { setAuthState, setLoading, setError, logout, login, register, loginWithGoogle, loginWithFacebook,  resetPassword, setAuthData } = authSlice.actions;
 export default authSlice.reducer;
