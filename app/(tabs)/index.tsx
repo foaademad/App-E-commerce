@@ -11,9 +11,7 @@ import Categories from '../home/categories/Categories';
 import DailyDeals from '../home/dailyDeals/DailyDeals';
 import FeaturedBrands from '../home/featuredBrands/FeaturedBrands';
 import NewArrivals from '../home/newArrivals/NewArrivals';
-import PromotionalBanner from '../home/promotionalBanner/PromotionalBanner';
-import Recommendations from '../home/recommendations/Recommendations';
-import Trending from '../home/trending/Trending';
+
 
 const HomeScreen = () => {
   const { t } = useTranslation();
@@ -77,9 +75,7 @@ const HomeScreen = () => {
           <BestSellers />
           <FeaturedBrands />
           <DailyDeals />
-          <Trending />
-          <Recommendations />
-          <PromotionalBanner />
+         
         </Animated.View>
       </ScrollView>
     </View>
