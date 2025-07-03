@@ -22,7 +22,12 @@
     "email_invalid": "اكتب الايميل بشكل صحيح",
     "email_required": "ادخل الايميل",
     "password_min": "كلمة المرور يجب أن تكون 6 أحرف على الأقل",
-    "password_required": "كلمة المرور مطلوبة"
+      "password_required": "كلمة المرور مطلوبة",
+      "login_success": "تم تسجيل الدخول بنجاح",
+      "login_success_description": "لقد تم تسجيل الدخول بنجاح",
+      "login_failed": "فشل تسجيل الدخول",
+      "login_failed_description": "يرجى التحقق من الايميل وكلمة المرور",
+      "confirm_your_email": "يرجى التحقق من الايميل"
   },
   
     "signup": {

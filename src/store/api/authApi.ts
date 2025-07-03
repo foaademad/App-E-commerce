@@ -44,6 +44,8 @@ export const registerUser =  (data: IRegisterUser ) => {
           errorMsg = Object.values(error.response.data.errors).flat().join(' \n ');
         } else if (error.response.data.title) {
           errorMsg = error.response.data.title;
+        } else if (error.response.data.message) {
+          errorMsg = error.response.data.message;
         } else if (typeof error.response.data === 'string') {
           errorMsg = error.response.data;
         }
@@ -58,3 +60,51 @@ export const registerUser =  (data: IRegisterUser ) => {
     }
   }
 }
+
+
+  export const loginUser = (data: any) => {
+  return async (dispatch: any) => {
+    try {
+      dispatch(setLoading(true));
+      const response = await api.post("Account/login", data);
+      dispatch(setAuthState(response.data));
+      return { success: true, data: response.data };
+    } catch (error: any) {
+      let errorMsg = 'Login failed';
+      let errorType = 'general';
+      if (error.response && error.response.data) {
+        if (error.response.data.errors) {
+          errorMsg = Object.values(error.response.data.errors).flat().join(' \n ');
+        } else if (error.response.data.title) {
+          errorMsg = error.response.data.title;
+        } else if (error.response.data.message) {
+          errorMsg = error.response.data.message;
+        } else if (typeof error.response.data === 'string') {
+          errorMsg = error.response.data;
+        }
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+      // تخصيص نوع الخطأ
+      if (
+        errorMsg.toLowerCase().includes("confirm") ||
+        errorMsg.toLowerCase().includes("confirmation")
+      ) {
+        errorType = "email_confirmation";
+      } else if (
+        errorMsg.toLowerCase().includes("invalid") ||
+        errorMsg.toLowerCase().includes("incorrect") ||
+        errorMsg.toLowerCase().includes("not found")
+      ) {
+        errorType = "invalid_credentials";
+      }
+      dispatch(setError(errorMsg));
+      return { success: false, error: errorMsg, errorType };
+    }
+    finally {
+      dispatch(setLoading(false));
+    }
+  }
+}
+
+
