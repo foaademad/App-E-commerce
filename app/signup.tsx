@@ -5,7 +5,6 @@ import { Formik } from "formik";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Alert,
   Animated,
   Dimensions,
   Platform,
@@ -21,6 +20,7 @@ import * as Yup from "yup";
 import { useLanguage } from "../src/context/LanguageContext";
 import { registerUser } from "../src/store/api/authApi";
 import { RootState } from "../src/store/store";
+import Toast from 'react-native-toast-message';
 
 interface FormValues {
   username: string;
@@ -157,10 +157,12 @@ const SignupScreen = () => {
       if (Platform.OS !== 'web') {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
-          Alert.alert(
-            t("signup.permission_required"),
-            t("signup.camera_permission_message")
-          );
+          Toast.show({
+            type: 'error',
+            text1: t("signup.permission_required"),
+            text2: t("signup.camera_permission_message"),
+            position: 'top',
+          });
         }
       }
     })();
@@ -199,54 +201,72 @@ const SignupScreen = () => {
   const handleSubmit = async (values: FormValues, { setSubmitting }: any) => {
     try {
       if (values.password !== values.confirmPassword) {
-        Alert.alert(t("signup.error"), t("signup.passwords_must_match"));
+        Toast.show({
+          type: 'error',
+          text1: t('signup.error'),
+          text2: t('signup.passwords_must_match'),
+          position: 'top',
+        });
         setSubmitting(false);
         return;
       }
-      // تجهيز بيانات IRegisterUser
       const isCompany = accountType === "company";
       const isMarketer = userType === "marketer";
       const isComanyOrShop = isCompany && businessType === "store";
+      // تحقق من رفع صورة إذا كان نوع الحساب شركة ونوع النشاط company فقط
+      if (isCompany && businessType === "company" && !imageUri) {
+        Toast.show({
+          type: 'error',
+          text1: t('signup.error'),
+          text2: t('signup.company_image_required'),
+          position: 'top',
+        });
+        setSubmitting(false);
+        return;
+      }
       const data: any = {
         email: values.email,
         password: values.password,
         confirmPassword: values.confirmPassword,
         isComanyOrShop: isComanyOrShop,
-        commercialRegister: imageUri || "",
         isMarketer: isMarketer,
         isComapny: isCompany,
         location: isCompany ? values.address : "",
         fullName: isCompany ? values.companyName : values.username,
         phoneNumber: values.Phone,
       };
+      if (isCompany) {
+        data.CommercialRegister = imageUri || "";
+      }
       // dispatch registerUser
-      await dispatch<any>(registerUser(data));
-      // التحقق من نجاح التسجيل من خلال authModel
-      setTimeout(() => {
-        const state = (window as any).store?.getState?.();
-        const isAuthenticated = state?.auth?.authModel?.isAuthenticated;
-        if (isAuthenticated) {
-          Alert.alert(
-            t("signup.success"),
-            t("signup.registration_successful"),
-            [
-              {
-                text: "OK",
-                onPress: () => {
-                  router.push({ pathname: "/signin" });
-                },
-              },
-            ]
-          );
-        } else {
-          Alert.alert(t("signup.error"), t("signup.registration_failed"));
-        }
-        setSubmitting(false);
-      }, 1000);
+      const result = await dispatch<any>(registerUser(data));
+      if (result && result.success) {
+        Toast.show({
+          type: 'success',
+          text1: t('signup.success'),
+          text2: t('signup.registration_successful'),
+          position: 'top',
+          onHide: () => {
+            router.push({ pathname: "/signin" });
+          },
+        });
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: t('signup.error'),
+          text2: result?.error || t('signup.registration_failed'),
+          position: 'top',
+        });
+      }
+      setSubmitting(false);
     } catch (error: any) {
-      console.error('Registration error:', error);
-      const errorMessage = error.message || t("signup.registration_failed");
-      Alert.alert(t("signup.error"), errorMessage);
+      const errorMessage = error?.message || t("signup.registration_failed");
+      Toast.show({
+        type: 'error',
+        text1: t('signup.error'),
+        text2: errorMessage,
+        position: 'top',
+      });
       setSubmitting(false);
     }
   };
@@ -267,7 +287,12 @@ const SignupScreen = () => {
         handleChange("companyImage", asset.uri);
       }
     } catch (error) {
-      Alert.alert(t("signup.error"), t("signup.image_pick_error"));
+      Toast.show({
+        type: 'error',
+        text1: t('signup.error'),
+        text2: t('signup.image_pick_error'),
+        position: 'top',
+      });
     }
   };
 
@@ -651,12 +676,11 @@ const SignupScreen = () => {
                       )}
 
                       {/* رفع الصورة */}
-                      {businessType === "company" && (
-                        <View
-                          style={[styles.inputContainer, isRTL && { flexDirection: "row-reverse" }]}
-                        >
+                      
+                        <View style={[styles.inputContainer, isRTL && { flexDirection: "row-reverse" }]}>
                           <Ionicons name="image-outline" size={20} color="#333" />
                           <View style={styles.imageUploadRow}>
+                            <Text style={styles.imageName}>{t("signup.commercial_register_upload")}</Text>
                             {!imageUri ? (
                               <TouchableOpacity
                                 style={styles.imageUploadButton}
@@ -679,7 +703,7 @@ const SignupScreen = () => {
                             )}
                           </View>
                         </View>
-                      )}
+                     
                       {touched.companyImage && errors.companyImage && (
                         <Text style={styles.errorText}>{errors.companyImage}</Text>
                       )}

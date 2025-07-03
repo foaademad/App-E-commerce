@@ -60,7 +60,7 @@ export interface IRegisterUser extends IBasicDataUser {
   password: string;
   confirmPassword: string;
   isComanyOrShop: boolean;
-  commercialRegister: File;
+  CommercialRegister: File;
   location: string;
 }
 

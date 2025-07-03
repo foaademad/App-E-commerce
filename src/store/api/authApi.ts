@@ -1,7 +1,6 @@
-import { useDispatch } from 'react-redux';
-import { login, register, setAuthState, setError, setLoading } from '../slice/authSlice';
+import { setAuthState, setError, setLoading } from '../slice/authSlice';
 import api from '../utility/api/api';
-import { IAuthModel, IRegisterUser } from '../utility/interfaces/authInterface';
+import { IRegisterUser } from '../utility/interfaces/authInterface';
 
 // Password (string)
   // ConfirmPassword (string)
@@ -24,7 +23,7 @@ export const registerUser =  (data: IRegisterUser ) => {
       formData.append("Password", data.password);
       formData.append("ConfirmPassword", data.confirmPassword);
       formData.append("IsComanyOrShop", data.isComanyOrShop.toString());
-      formData.append("CommercialRegister", data.commercialRegister);
+      formData.append("CommercialRegister", data.CommercialRegister);
       formData.append("IsMarketer", data.isMarketer.toString());
       formData.append("IsComapny", data.isComapny.toString());
       formData.append("Location", data.location);
@@ -36,13 +35,26 @@ export const registerUser =  (data: IRegisterUser ) => {
         },
       });
       dispatch(setAuthState(response.data));
-    } catch (error) {
-      console.log(error);
-      dispatch(setError(error as string));
+      return { success: true, data: response.data };
+    } catch (error: any) {
+      let errorMsg = 'Registration failed';
+      if (error.response && error.response.data) {
+        if (error.response.data.errors) {
+          // جمع كل رسائل الأخطاء في نص واحد
+          errorMsg = Object.values(error.response.data.errors).flat().join(' \n ');
+        } else if (error.response.data.title) {
+          errorMsg = error.response.data.title;
+        } else if (typeof error.response.data === 'string') {
+          errorMsg = error.response.data;
+        }
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+      dispatch(setError(errorMsg));
+      return { success: false, error: errorMsg };
     }
     finally {
       dispatch(setLoading(false));
     }
   }
-
 }

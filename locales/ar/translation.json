@@ -1,4 +1,4 @@
-{
+  {
   "welcome": {
     "part1": "مرحبًا بك في Ch",
     "highlight": "2",
@@ -34,6 +34,11 @@
       "email": "الايميل*",
       "password": "الباسورد*",
       "confirm_password": "تأكيد كلمة المرور*",
+      
+      "registration_successful": "تم إنشاء حسابك بنجاح",
+      "registration_failed": "فشل إنشاء حسابك",
+      
+      "passwords_must_match": "كلمات المرور يجب أن تتطابق",
       "sign_up_button": "إنشاء حساب",
       "already_have_account": "هل لديك حساب بالفعل؟ ",
       "login": "تسجيل الدخول",
@@ -104,7 +109,9 @@
       "select_company_type": "اختر نوع الشركة",
       "store": "متجر",
       "next_step": "الخطوة التالية",
-      "back": "العودة"
+      "back": "العودة",
+      "commercial_register_upload": "السجل التجاري",
+      "commercial_register_upload_description": "رفع السجل التجاري للمتابعة"
     },
   "profile": {
     "edit_profile": {
