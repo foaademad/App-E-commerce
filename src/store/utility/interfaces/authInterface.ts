@@ -28,16 +28,7 @@ export interface CompanyDetails {
 export interface IAuthModel {
   isAuthenticated: boolean;
   user: {
-    id: string;
-    name: string;
-    email: string;
-    role: UserRole;
-    avatar?: string;
-    phoneNumber?: string;
-    isCompany?: boolean;
-    isMarketer?: boolean;
-    createdAt?: string;
-    updatedAt?: string;
+    
   } | null;
 }
 

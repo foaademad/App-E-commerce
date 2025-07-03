@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import cookie from "react-cookies";
-import { CompanyDetails, UserRole } from "../utility/interfaces/authInterface";
+import { IRegisterUser, UserRole } from "../utility/interfaces/authInterface";
 
 interface IAuthModel {
   isAuthenticated: boolean;
@@ -60,13 +60,7 @@ const authSlice = createSlice({
     },
     register: (
       state,
-      action: PayloadAction<{
-        email: string;
-        password: string;
-        name: string;
-        role: UserRole;
-        companyDetails?: CompanyDetails;
-      }>
+      action: PayloadAction<IRegisterUser>
     ) => {
       state.loading = true;
       state.error = null;

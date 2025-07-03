@@ -16,12 +16,11 @@ import {
   TouchableOpacity,
   View
 } from "react-native";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import * as Yup from "yup";
 import { useLanguage } from "../src/context/LanguageContext";
-import { useAuth } from "../src/store/api/authApi";
+import { registerUser } from "../src/store/api/authApi";
 import { RootState } from "../src/store/store";
-import { CompanyDetails, UserRole } from "../src/store/utility/interfaces/authInterface";
 
 interface FormValues {
   username: string;
@@ -88,6 +87,7 @@ const getValidationSchema = (t: any, accountType: string) => {
 };
 
 const SignupScreen = () => {
+  const dispatch = useDispatch();
   const { loading, error, authModel } = useSelector((state: RootState) => state.auth);
   const { t } = useTranslation();
   const { language } = useLanguage();
@@ -101,7 +101,6 @@ const SignupScreen = () => {
   const router = useRouter();
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [imageName, setImageName] = useState<string | null>(null);
-  const { registerUser } = useAuth(); // استخدام useAuth
   const [balls] = useState(() =>
     Array(5)
       .fill(0)
@@ -199,66 +198,55 @@ const SignupScreen = () => {
 
   const handleSubmit = async (values: FormValues, { setSubmitting }: any) => {
     try {
-      // التحقق من تطابق كلمة المرور
       if (values.password !== values.confirmPassword) {
         Alert.alert(t("signup.error"), t("signup.passwords_must_match"));
         setSubmitting(false);
         return;
       }
-
-      // تحديد الدور (role) بناءً على نوع الحساب ونوع المستخدم
-      const role: UserRole = accountType === "company" ? "company" : userType === "marketer" ? "marketer" : "user";
-
-      // إعداد بيانات companyDetails إذا كان نوع الحساب هو "company"
-      const companyDetails : CompanyDetails | undefined =
-        accountType === "company"
-          ? {
-              address: values.address,
-              businessRegNumber: values.businessRegNumber,
-              companyImage: imageUri
-                ? {
-                    uri: imageUri,
-                    name: imageName || "commercial_register.jpg",
-                    type: "image/jpeg",
-                  }
-                : undefined,
-            }
-          : undefined;
-
-      // إعداد البيانات لإرسالها إلى registerUser
-      const name = accountType === "company" ? values.companyName : values.username;
-
-      // استدعاء registerUser من useAuth
-      const result = await registerUser(
-        values.email,
-        values.password,
-        name,
-        role,
-        companyDetails
-      );
-
-      // التحقق من نجاح التسجيل
-      if (result.isAuthenticated) {
-        Alert.alert(
-          t("signup.success"),
-          t("signup.registration_successful"),
-          [
-            {
-              text: "OK",
-              onPress: () => {
-                router.push({ pathname: "/signin" });
+      // تجهيز بيانات IRegisterUser
+      const isCompany = accountType === "company";
+      const isMarketer = userType === "marketer";
+      const isComanyOrShop = isCompany && businessType === "store";
+      const data: any = {
+        email: values.email,
+        password: values.password,
+        confirmPassword: values.confirmPassword,
+        isComanyOrShop: isComanyOrShop,
+        commercialRegister: imageUri || "",
+        isMarketer: isMarketer,
+        isComapny: isCompany,
+        location: isCompany ? values.address : "",
+        fullName: isCompany ? values.companyName : values.username,
+        phoneNumber: values.Phone,
+      };
+      // dispatch registerUser
+      await dispatch<any>(registerUser(data));
+      // التحقق من نجاح التسجيل من خلال authModel
+      setTimeout(() => {
+        const state = (window as any).store?.getState?.();
+        const isAuthenticated = state?.auth?.authModel?.isAuthenticated;
+        if (isAuthenticated) {
+          Alert.alert(
+            t("signup.success"),
+            t("signup.registration_successful"),
+            [
+              {
+                text: "OK",
+                onPress: () => {
+                  router.push({ pathname: "/signin" });
+                },
               },
-            },
-          ]
-        );
-      } else {
-        throw new Error(t("signup.registration_failed"));
-      }
+            ]
+          );
+        } else {
+          Alert.alert(t("signup.error"), t("signup.registration_failed"));
+        }
+        setSubmitting(false);
+      }, 1000);
     } catch (error: any) {
       console.error('Registration error:', error);
       const errorMessage = error.message || t("signup.registration_failed");
       Alert.alert(t("signup.error"), errorMessage);
-    } finally {
       setSubmitting(false);
     }
   };
