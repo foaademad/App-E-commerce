@@ -43,7 +43,7 @@ export default StyleSheet.create({
     color: '#2c3e50',
     marginVertical: 16,
     paddingHorizontal: 16,
-    textAlign: 'left',
+    textAlign: 'right',
   },
   sectionContainer: {
     backgroundColor: '#fff',

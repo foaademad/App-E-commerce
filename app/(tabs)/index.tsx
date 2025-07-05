@@ -42,8 +42,8 @@ const HomeScreen = () => {
     <View style={styles.container}>
       <View style={dynamicSearchContainerStyle}>
         <View style={dynamicSearchBarStyle}>
-          <Search size={20} color="#666" style={dynamicSearchIconStyle} />
           <TextInput style={styles.searchText} placeholder={t('searchProducts')} />
+          <Search size={20} color="#666" style={dynamicSearchIconStyle} />
         </View>
       </View>
        {/* athor component here  */}

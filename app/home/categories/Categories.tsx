@@ -1,5 +1,5 @@
 import { ChevronDown, X } from "lucide-react-native";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Dimensions,
@@ -17,7 +17,7 @@ import { getCategoriesApi } from "../../../src/store/api/categoryApi";
 import { AppDispatch, RootState } from "../../../src/store/store";
 import { CategoryDto } from "../../../src/store/utility/interfaces/categoryInterface";
 
-// مكون عنصر الفئة
+// عنصر الفئة في الشريط الأفقي
 const CategoryItem = ({
   item,
   isSelected,
@@ -28,6 +28,11 @@ const CategoryItem = ({
   onPress: (id: string) => void;
 }) => {
   const { t } = useTranslation();
+
+  // دالة لتقصير الاسم
+  const getShortName = (name: string) => {
+    return name.length > 10 ? name.slice(0, 10) + '...' : name;
+  };
 
   return (
     <TouchableOpacity
@@ -41,6 +46,7 @@ const CategoryItem = ({
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
+        width: 120, // 🔧 نحدد العرض ليتوافق مع ITEM_WIDTH
       }}
     >
       <Text
@@ -51,13 +57,13 @@ const CategoryItem = ({
           textAlign: "center",
         }}
       >
-        {t(item.nameEn)}
+        {getShortName(t(item.nameEn))}
       </Text>
     </TouchableOpacity>
   );
 };
 
-// مكون عنصر الفئة في المودال
+// عنصر الفئة داخل المودال
 const ModalCategoryItem = ({
   item,
   onPress,
@@ -96,45 +102,51 @@ const ModalCategoryItem = ({
   );
 };
 
-// المكون الرئيسي للفئات
+const ITEM_WIDTH = 130; // ✅ العرض المناسب لكل عنصر
+
 const Categories = () => {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const dispatch = useDispatch<AppDispatch>();
   const { categories, loading } = useSelector((state: RootState) => state.category);
 
-  // استخراج جميع الأبناء (subcategories) من جميع الكاتيجوري الرئيسية
   const subCategories: CategoryDto[] = categories
     .filter((cat) => cat.parentId === null)
     .flatMap((cat) => cat.children || []);
 
-  // إضافة خيار ALL في البداية
   const allCategory = { id: 'all', nameEn: 'All' } as CategoryDto;
   const categoriesWithAll = [allCategory, ...subCategories];
 
-  
-  // افتراضياً ALL هي المختارة
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [modalVisible, setModalVisible] = useState(false);
 
   const windowWidth = Dimensions.get("window").width;
+  const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
     dispatch(getCategoriesApi());
   }, [dispatch]);
 
-  // معالج الضغط على الفئة
   const handleCategoryPress = (categoryId: string) => {
     setSelectedCategory(categoryId);
     setModalVisible(false);
+
+    const index = categoriesWithAll.findIndex((cat) => cat.id === categoryId);
+    setTimeout(() => {
+      if (flatListRef.current && index >= 0) {
+        flatListRef.current.scrollToIndex({
+          index,
+          animated: true,
+          viewPosition: 0.5, // ✅ التمركز في المنتصف
+        });
+      }
+    }, 300);
   };
 
-  // معالج فتح وإغلاق المودال
   const toggleModal = () => {
     setModalVisible(!modalVisible);
   };
 
-  // عرض عنصر الفئة في القائمة الأفقية
   const renderCategoryItem = ({ item }: { item: CategoryDto }) => (
     <CategoryItem
       item={item}
@@ -145,7 +157,7 @@ const Categories = () => {
 
   return (
     <View>
-      {/* شريط الفئات الأفقي مع زر عرض الكل */}
+      {/* ✅ الشريط الأفقي للفئات + See All */}
       <View
         style={{
           flexDirection: language === "ar" ? "row-reverse" : "row",
@@ -161,6 +173,7 @@ const Categories = () => {
           }}
         >
           <FlatList
+            ref={flatListRef}
             data={categoriesWithAll}
             keyExtractor={(item) => item.id}
             renderItem={renderCategoryItem}
@@ -171,16 +184,24 @@ const Categories = () => {
               alignItems: "center",
               justifyContent: "center",
             }}
+            getItemLayout={(_, index) => ({
+              length: ITEM_WIDTH,
+              offset: ITEM_WIDTH * index,
+              index,
+            })}
+            onScrollToIndexFailed={({ index, averageItemLength }) => {
+              flatListRef.current?.scrollToOffset({
+                offset: averageItemLength * index,
+                animated: true,
+              });
+            }}
           />
         </View>
-        {/* see all text */}
         <TouchableOpacity
           onPress={toggleModal}
           style={{
             flexDirection: language === "ar" ? "row-reverse" : "row",
             alignItems: "center",
-            paddingHorizontal: 0,
-            paddingVertical: 0,
           }}
         >
           <Text
@@ -197,7 +218,8 @@ const Categories = () => {
           <ChevronDown size={16} color="#666" />
         </TouchableOpacity>
       </View>
-      {/* خط رمادي فاصل أسفل شريط الفئات */}
+
+      {/* ✅ فاصل رمادي */}
       <View
         style={{
           height: 1,
@@ -205,7 +227,7 @@ const Categories = () => {
         }}
       />
 
-      {/* المودال لعرض كل الفئات */}
+      {/* ✅ مودال عرض الفئات */}
       <Modal
         animationType="fade"
         transparent={true}
@@ -260,9 +282,7 @@ const Categories = () => {
 
             <ScrollView
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={{
-                paddingBottom: 16,
-              }}
+              contentContainerStyle={{ paddingBottom: 16 }}
             >
               {categoriesWithAll.map((category) => (
                 <ModalCategoryItem

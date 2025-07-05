@@ -1,9 +1,12 @@
 import { useRouter } from 'expo-router';
-import React from 'react';
-import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../../src/store/store';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
+import { getProducts } from '../../../src/store/api/productApi';
+import { AppDispatch, RootState } from '../../../src/store/store';
 import { ProductDto } from '../../../src/store/utility/interfaces/productInterface';
+
+const PAGE_SIZE = 10;
 
 const ProductItem = ({ item }: { item: ProductDto }) => {
   const router = useRouter();
@@ -39,7 +42,24 @@ const ProductItem = ({ item }: { item: ProductDto }) => {
 };
 
 const BestSellers = () => {
-  const productsBest = useSelector((state: RootState) => state.product.productsBest);
+  const dispatch = useDispatch<AppDispatch>();
+  const { productsBest, loading } = useSelector((state: RootState) => state.product);
+  const [visibleProducts, setVisibleProducts] = useState<ProductDto[]>([]);
+  const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    dispatch(getProducts());
+  }, [dispatch]);
+
+  useEffect(() => {
+    setVisibleProducts(productsBest.slice(0, PAGE_SIZE * page));
+  }, [productsBest, page]);
+
+  const handleLoadMore = () => {
+    if (visibleProducts.length < productsBest.length) {
+      setPage((prev) => prev + 1);
+    }
+  };
 
   const renderItem = ({ item }: { item: ProductDto }) => (
     <ProductItem item={item} />
@@ -48,14 +68,27 @@ const BestSellers = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Best Sellers</Text>
-      <FlatList
-        data={productsBest}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.listContainer}
-      />
+      {loading && visibleProducts.length === 0 ? (
+        <View style={{ justifyContent: 'center', alignItems: 'center', minHeight: 120 }}>
+          <ActivityIndicator size="large" color="#36c7f6" />
+        </View>
+      ) : (
+        <FlatList
+          data={visibleProducts}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.listContainer}
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            loading && visibleProducts.length < productsBest.length ? (
+              <ActivityIndicator size="small" color="#36c7f6" />
+            ) : null
+          }
+        />
+      )}
     </View>
   );
 };
