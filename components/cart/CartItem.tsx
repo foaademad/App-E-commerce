@@ -1,10 +1,10 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
-import { useTheme } from '@/context/ThemeContext';
-import { useLanguage } from '@/context/LanguageContext';
+import { useLanguage } from '@/src/context/LanguageContext';
+import { useTheme } from '@/src/context/ThemeContext';
 import { useRouter } from 'expo-router';
-import { useTranslation } from 'react-i18next';
 import { Minus, Plus, Trash2 } from 'lucide-react-native';
+import React from 'react';
+import { useTranslation } from 'react-i18next';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 type CartItemProps = {
   item: {
@@ -26,7 +26,7 @@ const CartItem: React.FC<CartItemProps> = ({
   onDecrease,
 }) => {
   const { colors } = useTheme();
-  const { isRTL } = useLanguage();
+  const { language } = useLanguage();
   const { t } = useTranslation();
   const router = useRouter();
 
@@ -36,7 +36,7 @@ const CartItem: React.FC<CartItemProps> = ({
 
   const styles = StyleSheet.create({
     container: {
-      flexDirection: isRTL ? 'row-reverse' : 'row',
+      flexDirection: language === 'ar' ? 'row-reverse' : 'row',
       padding: 12,
       marginBottom: 12,
       backgroundColor: colors.card,
@@ -51,15 +51,15 @@ const CartItem: React.FC<CartItemProps> = ({
       width: 80,
       height: 80,
       borderRadius: 8,
-      marginRight: isRTL ? 0 : 12,
-      marginLeft: isRTL ? 12 : 0,
+      marginRight: language === 'ar' ? 0 : 12,
+      marginLeft: language === 'ar' ? 12 : 0,
     },
     detailsContainer: {
       flex: 1,
       justifyContent: 'space-between',
     },
     topRow: {
-      flexDirection: isRTL ? 'row-reverse' : 'row',
+      flexDirection: language === 'ar' ? 'row-reverse' : 'row',
       justifyContent: 'space-between',
       alignItems: 'flex-start',
     },
@@ -69,7 +69,7 @@ const CartItem: React.FC<CartItemProps> = ({
       fontFamily: 'Roboto-Medium',
       marginBottom: 4,
       flex: 1,
-      textAlign: isRTL ? 'right' : 'left',
+      textAlign: language === 'ar' ? 'right' : 'left',
     },
     removeButton: {
       padding: 4,
@@ -79,15 +79,15 @@ const CartItem: React.FC<CartItemProps> = ({
       color: colors.primary,
       fontFamily: 'Roboto-Bold',
       marginBottom: 8,
-      textAlign: isRTL ? 'right' : 'left',
+      textAlign: language === 'ar' ? 'right' : 'left',
     },
     bottomRow: {
-      flexDirection: isRTL ? 'row-reverse' : 'row',
+      flexDirection: language === 'ar' ? 'row-reverse' : 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
     },
     quantityContainer: {
-      flexDirection: isRTL ? 'row-reverse' : 'row',
+      flexDirection: language === 'ar' ? 'row-reverse' : 'row',
       alignItems: 'center',
       borderWidth: 1,
       borderColor: colors.border,
@@ -112,7 +112,7 @@ const CartItem: React.FC<CartItemProps> = ({
       fontSize: 16,
       color: colors.text,
       fontFamily: 'Roboto-Bold',
-      textAlign: isRTL ? 'left' : 'right',
+      textAlign: language === 'ar' ? 'left' : 'right',
     },
   });
 

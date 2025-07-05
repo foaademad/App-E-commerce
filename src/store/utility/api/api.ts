@@ -1,50 +1,36 @@
 import axios from "axios";
-import cookie from 'react-cookies';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const api = axios.create({
-    baseURL: "http://localhost:5000/api",
-    headers: {
-        "Content-Type": "application/json",
-    },
+  baseURL: "http://localhost:5000/api",
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
-
+// دمج كل الإعدادات في Interceptor واحد
 api.interceptors.request.use(
-    (config) => {
-        const authModel = cookie.load('authModel');
-        if (authModel?.token) {
-          config.headers.Authorization = `Bearer ${authModel.token}`;
-        }
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
-    }
-);
-
-api.interceptors.request.use((config) => {
+  async (config) => {
     try {
-      const authModel = cookie.load("authModel");
+      const authModelString = await AsyncStorage.getItem("authModel");
+      const authModel = authModelString ? JSON.parse(authModelString) : null;
+
       if (authModel?.token) {
         config.headers.Authorization = `Bearer ${authModel.token}`;
       }
-      const languageStorage = localStorage?.getItem("language-storage");
-      const language = languageStorage ? JSON.parse(languageStorage)?.state?.language || "ar" : "ar";
-      config.headers["Accept-Language"] = language;
+
+      config.headers["X-Client-Type"] = "mobile";
+      config.headers["Accept-Language"] = "ar";
+
       return config;
     } catch (error) {
-      console.error("Request interceptor error:", error);
+      console.error("Interceptor error:", error);
       return config;
     }
-  }, (error) => {
-    console.error("Request configuration error:", error);
+  },
+  (error) => {
     return Promise.reject(error);
-  });
-
+  }
+);
 
 export default api;
-
-
-
-
-
