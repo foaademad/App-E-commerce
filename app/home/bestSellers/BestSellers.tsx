@@ -1,28 +1,37 @@
 import { useRouter } from 'expo-router';
-import { ChevronRight } from "lucide-react-native";
-import React, { useEffect, useState } from 'react';
-import { useTranslation } from "react-i18next";
+import React from 'react';
 import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { getBestSellers } from '../../../src/services/api';
-import { Product } from '../../../src/types';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../src/store/store';
+import { ProductDto } from '../../../src/store/utility/interfaces/productInterface';
 
-import { useLanguage } from "../../../src/context/LanguageContext";
-
-const ProductItem = ({ item }: { item: Product }) => {
+const ProductItem = ({ item }: { item: ProductDto }) => {
   const router = useRouter();
 
   return (
     <TouchableOpacity
       style={styles.productCard}
       onPress={() => router.push(`/product/${item.id}`)}
+      activeOpacity={0.85}
     >
-      <Image source={{ uri: item.image }} style={styles.productImage} />
+      <Image source={{ uri: item.mainPictureUrl }} style={styles.productImage} resizeMode="cover" />
       <View style={styles.productInfo}>
-        <Text style={styles.productName} numberOfLines={2}>{item.name}</Text>
-        <Text style={styles.productPrice}>${item.price.toFixed(2)}</Text>
+        <Text style={styles.productName} numberOfLines={2}>{item.title}</Text>
+        <Text style={styles.weight}>⚖ {item.physicalParameters?.weight ?? '-'} kg</Text>
         <View style={styles.ratingContainer}>
-          <Text style={styles.rating}>★ {item.rating}</Text>
-          <Text style={styles.reviews}>({item.reviews})</Text>
+          <Text style={styles.rating}>★ 0</Text>
+          <Text style={styles.reviews}>(0)</Text>
+        </View>
+        <Text style={styles.productPrice}>
+          {item.price?.convertedPriceList?.internal?.sign} {item.price?.convertedPriceList?.internal?.price}
+        </Text>
+        <Text style={styles.usdPrice}>
+          ${item.price?.convertedPriceList?.displayedMoneys?.[0]?.price ?? '-'} USD
+        </Text>
+        <Text style={styles.quantity}>{item.masterQuantity} left</Text>
+        <View style={styles.vendorRow}>
+          <Text style={styles.vendor}>{item.vendorDisplayName || item.vendorName}</Text>
+          <Text style={styles.verified}>✔ Verified</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -30,65 +39,19 @@ const ProductItem = ({ item }: { item: Product }) => {
 };
 
 const BestSellers = () => {
-  const { t } = useTranslation();
-  const { language } = useLanguage();
-  const router = useRouter();
-  const [bestSellers, setBestSellers] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const productsBest = useSelector((state: RootState) => state.product.productsBest);
 
-  useEffect(() => {
-    loadBestSellers();
-  }, []);
-
-  const loadBestSellers = async () => {
-    try {
-      const products = await getBestSellers();
-      setBestSellers(products);
-    } catch (error) {
-      console.error('Error loading best sellers:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const renderItem = ({ item }: { item: Product }) => (
+  const renderItem = ({ item }: { item: ProductDto }) => (
     <ProductItem item={item} />
   );
 
-  if (loading) {
-    return (
-      <View style={styles.container}>
-        <Text>Loading best sellers...</Text>
-      </View>
-    );
-  }
-
   return (
     <View style={styles.container}>
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginHorizontal: 10,
-        }}
-      >
-        <Text style={styles.title}>{t("Best Sellers")}</Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center', }}>
-          <Text style={styles.seeAll}>{t("See All")}</Text>
-          <ChevronRight
-            size={16}
-            color="#36c7f6"
-            style={{
-              transform: [{ rotate: language === "ar" ? "180deg" : "0deg" }],
-            }}
-          />
-        </View>
-      </View>
+      <Text style={styles.title}>Best Sellers</Text>
       <FlatList
-        data={bestSellers}
+        data={productsBest}
         renderItem={renderItem}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => item.id}
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.listContainer}
@@ -108,59 +71,89 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 15,
     paddingHorizontal: 15,
+    color: '#222',
   },
   listContainer: {
     paddingHorizontal: 10,
   },
   productCard: {
-    width: 160,
-    marginHorizontal: 5,
-    backgroundColor: 'white',
-    borderRadius: 10,
+    width: 180,
+    marginHorizontal: 7,
+    backgroundColor: '#fff',
+    borderRadius: 16,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.10,
+    shadowRadius: 4,
+    elevation: 4,
+    overflow: 'hidden',
+    position: 'relative',
   },
   productImage: {
     width: '100%',
-    height: 160,
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
+    height: 120,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    backgroundColor: '#f4f4f4',
   },
   productInfo: {
-    padding: 10,
+    padding: 12,
   },
   productName: {
     fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 5,
+    fontWeight: '600',
+    marginBottom: 4,
+    color: '#222',
   },
-  productPrice: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#2196F3',
-    marginBottom: 5,
+  weight: {
+    fontSize: 12,
+    color: '#888',
+    marginBottom: 2,
   },
   ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 2,
   },
   rating: {
     fontSize: 12,
     color: '#FFD700',
-    marginRight: 5,
+    marginRight: 3,
   },
   reviews: {
     fontSize: 12,
     color: '#666',
   },
-  seeAll: {
+  productPrice: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#36c7f6',
+    marginBottom: 2,
+  },
+  usdPrice: {
+    fontSize: 13,
+    color: '#888',
+    marginBottom: 2,
+  },
+  quantity: {
+    fontSize: 12,
+    color: '#888',
+    marginBottom: 2,
+  },
+  vendorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  vendor: {
     fontSize: 12,
     color: '#36c7f6',
+    fontWeight: 'bold',
+    marginRight: 6,
+  },
+  verified: {
+    fontSize: 12,
+    color: '#4CAF50',
+    fontWeight: 'bold',
   },
 });

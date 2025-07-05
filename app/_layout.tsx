@@ -48,7 +48,7 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
     initializeApp();
   }, []);
 
-  // ❗ التوجيه بعد التأكد من التحميل
+
   useEffect(() => {
     if (isAuthLoaded && shouldRedirect) {
       router.replace(shouldRedirect === "tabs" ? "/(tabs)" : "/");
