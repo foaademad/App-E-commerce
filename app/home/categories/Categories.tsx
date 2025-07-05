@@ -1,38 +1,32 @@
-
-
-import React, { useState } from "react";
+import { ChevronDown, X } from "lucide-react-native";
+import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
+  Dimensions,
   FlatList,
-  View,
+  Modal,
+  Pressable,
+  ScrollView,
   Text,
   TouchableOpacity,
-  Modal,
-  ScrollView,
-  Pressable,
-  Dimensions,
+  View,
 } from "react-native";
-import { useTranslation } from "react-i18next";
+import { useDispatch, useSelector } from "react-redux";
 import { useLanguage } from "../../../src/context/LanguageContext";
-import { ChevronDown, X } from "lucide-react-native";
-
-// بيانات الفئات
-const categoriesData = [
-  { id: 1, name: "All" },
-  { id: 2, name: "Personal Care & Household Cleaning" },
-  { id: 3, name: "Mother & Baby" },
-  { id: 4, name: "Electronics" },
-  { id: 5, name: "Fashion" },
-  { id: 6, name: "Home & Kitchen" },
-  { id: 7, name: "Beauty" },
-  { id: 8, name: "Toys & Games" },
-  { id: 9, name: "Sports & Outdoors" },
-  { id: 10, name: "Automotive" },
-  { id: 11, name: "Books & Stationery" },
-  { id: 12, name: "Jewelry & Watches" },
-];
+import { getCategoriesApi } from "../../../src/store/api/categoryApi";
+import { AppDispatch, RootState } from "../../../src/store/store";
+import { CategoryDto } from "../../../src/store/utility/interfaces/categoryInterface";
 
 // مكون عنصر الفئة
-const CategoryItem = ({ item, isSelected, onPress }) => {
+const CategoryItem = ({
+  item,
+  isSelected,
+  onPress,
+}: {
+  item: CategoryDto;
+  isSelected: boolean;
+  onPress: (id: string) => void;
+}) => {
   const { t } = useTranslation();
 
   return (
@@ -57,14 +51,22 @@ const CategoryItem = ({ item, isSelected, onPress }) => {
           textAlign: "center",
         }}
       >
-        {t(item.name)}
+        {t(item.nameEn)}
       </Text>
     </TouchableOpacity>
   );
 };
 
 // مكون عنصر الفئة في المودال
-const ModalCategoryItem = ({ item, onPress, isSelected }) => {
+const ModalCategoryItem = ({
+  item,
+  onPress,
+  isSelected,
+}: {
+  item: CategoryDto;
+  onPress: (id: string) => void;
+  isSelected: boolean;
+}) => {
   const { t } = useTranslation();
 
   return (
@@ -88,7 +90,7 @@ const ModalCategoryItem = ({ item, onPress, isSelected }) => {
           color: isSelected ? "#eee" : "#333",
         }}
       >
-        {t(item.name)}
+        {t(item.nameEn)}
       </Text>
     </TouchableOpacity>
   );
@@ -98,13 +100,31 @@ const ModalCategoryItem = ({ item, onPress, isSelected }) => {
 const Categories = () => {
   const { t } = useTranslation();
   const { language } = useLanguage();
-  const [selectedCategory, setSelectedCategory] = useState(1); // افتراضيًا الفئة "All" مختارة
+  const dispatch = useDispatch<AppDispatch>();
+  const { categories, loading } = useSelector((state: RootState) => state.category);
+
+  // استخراج جميع الأبناء (subcategories) من جميع الكاتيجوري الرئيسية
+  const subCategories: CategoryDto[] = categories
+    .filter((cat) => cat.parentId === null)
+    .flatMap((cat) => cat.children || []);
+
+  // إضافة خيار ALL في البداية
+  const allCategory = { id: 'all', nameEn: 'All' } as CategoryDto;
+  const categoriesWithAll = [allCategory, ...subCategories];
+
+  
+  // افتراضياً ALL هي المختارة
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [modalVisible, setModalVisible] = useState(false);
 
   const windowWidth = Dimensions.get("window").width;
 
+  useEffect(() => {
+    dispatch(getCategoriesApi());
+  }, [dispatch]);
+
   // معالج الضغط على الفئة
-  const handleCategoryPress = (categoryId) => {
+  const handleCategoryPress = (categoryId: string) => {
     setSelectedCategory(categoryId);
     setModalVisible(false);
   };
@@ -115,7 +135,7 @@ const Categories = () => {
   };
 
   // عرض عنصر الفئة في القائمة الأفقية
-  const renderCategoryItem = ({ item }) => (
+  const renderCategoryItem = ({ item }: { item: CategoryDto }) => (
     <CategoryItem
       item={item}
       isSelected={selectedCategory === item.id}
@@ -141,8 +161,8 @@ const Categories = () => {
           }}
         >
           <FlatList
-            data={categoriesData}
-            keyExtractor={(item) => item.id.toString()}
+            data={categoriesWithAll}
+            keyExtractor={(item) => item.id}
             renderItem={renderCategoryItem}
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -153,7 +173,7 @@ const Categories = () => {
             }}
           />
         </View>
- {/* see all text */}
+        {/* see all text */}
         <TouchableOpacity
           onPress={toggleModal}
           style={{
@@ -163,7 +183,6 @@ const Categories = () => {
             paddingVertical: 0,
           }}
         >
-         
           <Text
             style={{
               fontSize: 14,
@@ -171,12 +190,6 @@ const Categories = () => {
               fontFamily: "Poppins-Medium",
               marginRight: language === "ar" ? 2 : 0,
               marginLeft: language === "ar" ? 0 : 2,
-              // textShadowColor: "#eee", // White shadow color
-              // textShadowOffset:
-              //   language === "ar"
-              //     ? { width: 2, height: 0 }
-              //     : { width: -2, height: 0 }, // Right for ar, left for en
-              // textShadowRadius: 4, // Blur radius for the shadow
             }}
           >
             {t("See All")}
@@ -251,7 +264,7 @@ const Categories = () => {
                 paddingBottom: 16,
               }}
             >
-              {categoriesData.map((category) => (
+              {categoriesWithAll.map((category) => (
                 <ModalCategoryItem
                   key={category.id}
                   item={category}
