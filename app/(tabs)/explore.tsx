@@ -1,9 +1,13 @@
 import { useLanguage } from '@/src/context/LanguageContext';
-import { ChevronRight, Search } from 'lucide-react-native';
-import React, { useState } from 'react';
+import { getCategoriesApi } from '@/src/store/api/categoryApi';
+import { AppDispatch, RootState } from '@/src/store/store';
+import { CategoryDto } from '@/src/store/utility/interfaces/categoryInterface';
+import { ChevronRight, Folder, Search } from 'lucide-react-native';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  Image,
+  Animated,
+  Easing,
   Platform,
   ScrollView,
   StatusBar,
@@ -13,123 +17,11 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import Collapsible from 'react-native-collapsible';
+import { useDispatch, useSelector } from 'react-redux';
 
 // Main Categories Data
-const mainCategories = [
-  {
-    id: 1,
-    name: 'Electronics',
-    icon: '🔌',
-    subcategories: [
-      {
-        id: 101,
-        name: 'Smartphones',
-        products: [
-          {
-            id: 1001,
-            name: 'iPhone 14 Pro',
-            price: 999.99,
-            image: 'https://images.pexels.com/photos/1334597/pexels-photo-1334597.jpeg',
-            rating: 4.8,
-            reviews: 1234,
-          },
-          {
-            id: 1002,
-            name: 'Samsung Galaxy S23',
-            price: 899.99,
-            image: 'https://images.pexels.com/photos/1293120/pexels-photo-1293120.jpeg',
-            rating: 4.7,
-            reviews: 856,
-          },
-        ],
-      },
-      {
-        id: 102,
-        name: 'Laptops',
-        products: [
-          {
-            id: 1003,
-            name: 'MacBook Pro M2',
-            price: 1299.99,
-            image: 'https://images.pexels.com/photos/1337753/pexels-photo-1337753.jpeg',
-            rating: 4.9,
-            reviews: 2341,
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: 2,
-    name: 'Fashion',
-    icon: '👕',
-    subcategories: [
-      {
-        id: 201,
-        name: 'Men\'s Clothing',
-        products: [
-          {
-            id: 2001,
-            name: 'Classic T-Shirt',
-            price: 29.99,
-            image: 'https://images.pexels.com/photos/1334597/pexels-photo-1334597.jpeg',
-            rating: 4.5,
-            reviews: 432,
-          },
-        ],
-      },
-      {
-        id: 202,
-        name: 'Women\'s Clothing',
-        products: [
-          {
-            id: 2002,
-            name: 'Summer Dress',
-            price: 49.99,
-            image: 'https://images.pexels.com/photos/1293120/pexels-photo-1293120.jpeg',
-            rating: 4.6,
-            reviews: 321,
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: 3,
-    name: 'Home',
-    icon: '🏠',
-    subcategories: [
-      {
-        id: 301,
-        name: 'Furniture',
-        products: [
-          {
-            id: 3001,
-            name: 'Modern Sofa',
-            price: 799.99,
-            image: 'https://images.pexels.com/photos/1337753/pexels-photo-1337753.jpeg',
-            rating: 4.7,
-            reviews: 567,
-          },
-        ],
-      },
-      {
-        id: 302,
-        name: 'Kitchen',
-        products: [
-          {
-            id: 3002,
-            name: 'Smart Coffee Maker',
-            price: 129.99,
-            image: 'https://images.pexels.com/photos/1334597/pexels-photo-1334597.jpeg',
-            rating: 4.4,
-            reviews: 234,
-          },
-        ],
-      },
-    ],
-  },
-];
+
 
 interface Product {
   id: number;
@@ -156,133 +48,149 @@ interface Category {
 const ExploreScreen = () => {
   const { t } = useTranslation();
   const { language } = useLanguage();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-  const [selectedSubcategory, setSelectedSubcategory] = useState<Subcategory | null>(null);
+  const dispatch = useDispatch<AppDispatch>();
+  const { categories, loading } = useSelector((state: RootState) => state.category);
+  const [expandedIds, setExpandedIds] = useState<string[]>([]);
+  const [emptyCategoryId, setEmptyCategoryId] = useState<string | null>(null);
+  const [parentStack, setParentStack] = useState<CategoryDto[]>([]);
+  const borderAnim = useRef(new Animated.Value(0)).current;
 
-  const handleCategoryPress = (category: Category) => {
-    setSelectedCategory(category);
-    setSelectedSubcategory(null);
-  };
+  useEffect(() => {
+    dispatch(getCategoriesApi());
+  }, [dispatch]);
 
-  const handleSubcategoryPress = (subcategory: Subcategory) => {
-    setSelectedSubcategory(subcategory);
-  };
+  useEffect(() => {
+    Animated.loop(
+      Animated.timing(borderAnim, {
+        toValue: 1,
+        duration: 1800,
+        easing: Easing.linear,
+        useNativeDriver: false,
+      })
+    ).start();
+  }, []);
 
-  const handleBack = () => {
-    if (selectedSubcategory) {
-      setSelectedSubcategory(null);
-    } else if (selectedCategory) {
-      setSelectedCategory(null);
+  // دالة لإرجاع children لأي كاتيجوري
+  const getChildren = (cat: CategoryDto) => cat.children || [];
+
+  // دالة لإرجاع الكاتيجوري الرئيسية فقط
+  const getMainCategories = () => categories.filter((cat) => cat.parentId === null);
+
+  // دالة تبديل الفتح/الإغلاق
+  const toggleExpand = (id: string, childrenCount: number) => {
+    if (childrenCount === 0) {
+      setEmptyCategoryId(id);
+    } else {
+      setExpandedIds((prev) =>
+        prev.includes(id) ? prev.filter((eid) => eid !== id) : [...prev, id]
+      );
     }
   };
 
-  const renderMainCategories = () => (
-    <View style={styles.categoriesGrid}>
-      {mainCategories.map((category) => (
-        <TouchableOpacity
-          key={category.id}
-          style={styles.categoryCard}
-          onPress={() => handleCategoryPress(category)}
-        >
-          <View style={styles.categoryIcon}>
-            <Text style={styles.categoryEmoji}>{category.icon}</Text>
-          </View>
-          <Text style={styles.categoryName}>{category.name}</Text>
-          <ChevronRight size={20} color="#666" style={styles.chevronIcon} />
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
+  // زر Back: يرجع خطوة واحدة فقط (يغلق آخر كاتيجوري مفتوحة أو يزيل رسالة no products)
+  const handleBack = () => {
+    if (emptyCategoryId) {
+      setEmptyCategoryId(null);
+    } else {
+      setExpandedIds((prev) => prev.slice(0, -1));
+    }
+  };
 
-  const renderSubcategories = () => (
-    <View style={styles.subcategoriesContainer}>
-      <Text style={styles.sectionTitle}>{selectedCategory?.name}</Text>
-      <View style={styles.subcategoriesGrid}>
-        {selectedCategory?.subcategories.map((subcategory: any) => (
+  // دالة عرض الكارد مع دعم التداخل والأنيميشن
+  const renderCategoryTree = (category: CategoryDto, level = 0) => {
+    const isExpanded = expandedIds.includes(category.id);
+    const children = getChildren(category);
+    // بوردر متحرك
+    const borderWidth = isExpanded ? 2 : 0;
+    const animatedBorder = isExpanded ? {
+      borderWidth,
+      borderColor: 'transparent',
+      borderRadius: 22,
+      overflow: 'hidden' as 'hidden',
+    } : {};
+    const rotate = isExpanded ? '90deg' : '0deg';
+    return (
+      <View key={category.id} style={{ marginLeft: level * 18, marginBottom: 14 }}>
+        <Animated.View style={animatedBorder}>
           <TouchableOpacity
-            key={subcategory.id}
-            style={styles.subcategoryCard}
-            onPress={() => handleSubcategoryPress(subcategory)}
+            style={{
+              backgroundColor: '#f7fafd',
+              borderRadius: 22,
+              paddingVertical: 16,
+              paddingHorizontal: 18,
+              flexDirection: 'row',
+              alignItems: 'center',
+              shadowColor: '#36c7f6',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.13,
+              shadowRadius: 12,
+              elevation: 5,
+              zIndex: 2,
+            }}
+            onPress={() => toggleExpand(category.id, children.length)}
+            activeOpacity={0.7}
           >
-            <Text style={styles.subcategoryName}>{subcategory.name}</Text>
-            <Text style={styles.productCount}>
-              {subcategory.products.length} Products
-            </Text>
-            <ChevronRight size={20} color="#666" style={styles.chevronIcon} />
-          </TouchableOpacity>
-        ))}
-      </View>
-    </View>
-  );
-
-  const renderProducts = () => (
-    <View style={styles.productsContainer}>
-      <Text style={styles.sectionTitle}>{selectedSubcategory?.name}</Text>
-      <View style={styles.productsGrid}>
-        {selectedSubcategory?.products.map((product: any) => (
-          <TouchableOpacity key={product.id} style={styles.productCard}>
-            <Image source={{ uri: product.image }} style={styles.productImage} />
-            <View style={styles.productInfo}>
-              <Text style={styles.productName} numberOfLines={1}>
-                {product.name}
-              </Text>
-              <Text style={styles.productPrice}>${product.price}</Text>
-              <View style={styles.ratingContainer}>
-                <Text style={styles.ratingText}>
-                  ★ {product.rating} ({product.reviews})
-                </Text>
-              </View>
+            <View style={{
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              backgroundColor: '#e3f0fa',
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginRight: 14,
+            }}>
+              <Folder size={22} color="#36c7f6" />
             </View>
+            <Text style={{ fontSize: 15, fontWeight: '600', color: '#222', flex: 1, letterSpacing: 0.1 }} numberOfLines={1}>
+              {language === 'ar' ? category.nameAr : category.nameEn}
+            </Text>
+            {(category.children && category.children.length >= 0) && (
+              <ChevronRight size={22} color="#36c7f6" style={{ transform: [{ rotate }] , marginLeft: 8 }} />
+            )}
           </TouchableOpacity>
-        ))}
+        </Animated.View>
+        <Collapsible collapsed={!isExpanded} align="top">
+          <View style={{ marginTop: 8 }}>
+            {children.length > 0 && children.map((child) => renderCategoryTree(child, level + 1))}
+          </View>
+        </Collapsible>
       </View>
-    </View>
-  );
+    );
+  };
+
+  const mainCategories = getMainCategories();
 
   return (
-    <View style={styles.container}>
+    <View style={{ flex: 1, backgroundColor: '#fff' }}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-      
-      {/* Header with Search and Back Button */}
-      <View style={styles.header}>
-        {(selectedCategory || selectedSubcategory) && (
-          <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-            <ChevronRight
-              size={24}
-              color="#333"
-              style={[
-                styles.backIcon,
-                { transform: [{ rotate: '180deg' }] },
-              ]}
-            />
-          </TouchableOpacity>
-        )}
-        <View style={styles.searchContainer}>
-          <Search size={20} color="#666" style={styles.searchIcon} />
+      {/* Header */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingTop: Platform.OS === 'ios' ? 48 : 16, paddingBottom: 16, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#f0f0f0' }}>
+        
+        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: '#f5f5f5', borderRadius: 12, paddingHorizontal: 12, height: 44 }}>
           <TextInput
-            style={[
-              styles.searchInput,
-              { textAlign: language === 'ar' ? 'right' : 'left' },
-            ]}
+            style={{ flex: 1, fontSize: 15, color: '#333', textAlign: language === 'ar' ? 'right' : 'left' }}
             placeholder={t('Search products')}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
             placeholderTextColor="#999"
           />
+          <Search size={20} color="#666" style={{ marginRight: 8 }} />
         </View>
       </View>
-
-      <ScrollView
-        style={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        {selectedSubcategory
-          ? renderProducts()
-          : selectedCategory
-          ? renderSubcategories()
-          : renderMainCategories()}
-      </ScrollView>
+      {/* قائمة الكاتيجوري الشجرية مع Drop Down أو رسالة No products */}
+      {emptyCategoryId ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={{ color: '#888', fontSize: 18, marginBottom: 20 }}>
+            {language === 'ar' ? 'لا يوجد منتجات' : 'No products'}
+          </Text>
+        </View>
+      ) : (
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }} showsVerticalScrollIndicator={false}>
+          {mainCategories.length === 0 ? (
+            <Text style={{ textAlign: 'center', color: '#888', marginTop: 40 }}>{language === 'ar' ? 'لا يوجد منتجات' : 'No products'}</Text>
+          ) : (
+            mainCategories.map((cat) => renderCategoryTree(cat))
+          )}
+        </ScrollView>
+      )}
     </View>
   );
 };
