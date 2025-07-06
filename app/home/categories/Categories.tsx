@@ -137,7 +137,7 @@ const Categories = () => {
         flatListRef.current.scrollToIndex({
           index,
           animated: true,
-          viewPosition: 0.5, // ✅ التمركز في المنتصف
+          viewPosition: 0.5, 
         });
       }
     }, 300);
