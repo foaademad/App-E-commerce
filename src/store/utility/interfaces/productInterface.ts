@@ -164,6 +164,13 @@ export interface ProductBaseDto {
     credit: CreditDto;
     scores: ScoresDto;
     featuredValues: FeaturedValue[];
+    shopId: string;
+    years: number;
+    stars: number;
+    shopUrl: string;
+    vendorTypeImageUrl: string;
+    tradeLevel: string;
+    encrypted_vendor_id: string;
   }
   
   export interface CreditDto {
