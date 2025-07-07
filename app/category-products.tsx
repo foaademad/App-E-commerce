@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useEffect } from 'react';
-import { ActivityIndicator, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, FlatList, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { getallProductByCategoryId } from '../src/store/api/productApi';
 import { RootState } from '../src/store/store';
@@ -11,6 +11,15 @@ export default function CategoryProductsScreen() {
   const dispatch = useDispatch();
   const router = useRouter();
   const { currentCategory, loading, loadingMore, error } = useSelector((state: RootState) => state.product);
+
+  // شريط البحث
+  const [search, setSearch] = useState('');
+  const filteredProducts = currentCategory?.products?.filter(
+    (item) =>
+      (item.title?.toLowerCase().includes(search.toLowerCase()) ||
+        item.name?.toLowerCase().includes(search.toLowerCase()) ||
+        item.brandName?.toLowerCase().includes(search.toLowerCase()))
+  ) || [];
 
   useEffect(() => {
     // إذا لم يكن هناك كاتيجوري محدد، ارجع للصفحة السابقة
@@ -26,41 +35,49 @@ export default function CategoryProductsScreen() {
   };
 
   const handleLoadMore = () => {
+    // تحقق من وجود فئة حالية وأن هناك المزيد من المنتجات وأن التحميل ليس جارياً
     if (currentCategory && currentCategory.hasMore && !loadingMore) {
       const nextPage = (currentCategory.currentPage || 1) + 1;
       const categoryId = currentCategory.categoryId;
       if (categoryId) {
-        dispatch(getallProductByCategoryId(categoryId, nextPage, 20, true) as any);
+        // استخدام pageSize = 10 للحصول على 10 منتجات في كل مرة
+        dispatch(getallProductByCategoryId(categoryId, nextPage, 10, true, currentCategory.name, currentCategory.nameEn) as any);
       }
     }
   };
 
+  // كارد المنتج بنفس تصميم BestSellers
   const renderProduct = ({ item }: { item: ProductDto }) => (
     <TouchableOpacity
       style={styles.productCard}
       onPress={() => handleProductPress(item)}
-      activeOpacity={0.7}
+      activeOpacity={0.85}
     >
-      <Image
-        source={{ uri: item.mainPictureUrl || item.pictures?.[0]?.url }}
-        style={styles.productImage}
-        resizeMode="cover"
-      />
+      <Image source={{ uri: item.mainPictureUrl }} style={styles.productImage} resizeMode="cover" />
       <View style={styles.productInfo}>
-        <Text style={styles.productName} numberOfLines={2}>
-          {item.name}
-        </Text>
+        <Text style={styles.productName} numberOfLines={2}>{item.title}</Text>
+        <Text style={styles.weight}>⚖ {item.physicalParameters?.weight ?? '-'} kg</Text>
+        <View style={styles.ratingContainer}>
+          <Text style={styles.rating}>★ 0</Text>
+          <Text style={styles.reviews}>(0)</Text>
+        </View>
         <Text style={styles.productPrice}>
-          {item.price.convertedPrice}
+          {item.price?.convertedPriceList?.internal?.sign} {item.price?.convertedPriceList?.internal?.price}
         </Text>
-        <Text style={styles.productBrand}>
-          {item.brandName}
+        <Text style={styles.usdPrice}>
+          ${item.price?.convertedPriceList?.displayedMoneys?.[0]?.price ?? '-'} USD
         </Text>
+        <Text style={styles.quantity}>{item.masterQuantity} left</Text>
+        <View style={styles.vendorRow}>
+          <Text style={styles.vendor}>{item.vendorDisplayName || item.vendorName}</Text>
+          <Text style={styles.verified}>✔ Verified</Text>
+        </View>
       </View>
     </TouchableOpacity>
   );
 
   const renderLoadMoreButton = () => {
+    // لا تظهر الزر إذا لم يكن هناك المزيد من المنتجات
     if (!currentCategory?.hasMore) return null;
     
     return (
@@ -72,7 +89,12 @@ export default function CategoryProductsScreen() {
           activeOpacity={0.8}
         >
           {loadingMore ? (
-            <ActivityIndicator size="small" color="#fff" />
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+              <ActivityIndicator size="small" color="#fff" />
+              <Text style={{ color: '#fff', fontSize: 14, fontFamily: 'Poppins-Regular', marginLeft: 8 }}>
+                Loading more products...
+              </Text>
+            </View>
           ) : (
             <Text style={styles.loadMoreText}>Load More Products</Text>
           )}
@@ -102,7 +124,7 @@ export default function CategoryProductsScreen() {
             if (currentCategory) {
               const categoryId = currentCategory.categoryId;
               if (categoryId) {
-                dispatch(getallProductByCategoryId(categoryId, 1, 20, false) as any);
+                dispatch(getallProductByCategoryId(categoryId, 1, 10, false, currentCategory.name, currentCategory.nameEn) as any);
               }
             }
           }}
@@ -134,17 +156,27 @@ export default function CategoryProductsScreen() {
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <Ionicons name="arrow-back" size={24} color="#fff" />
+          <Ionicons name="arrow-back" size={24} color="#36c7f6" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>
           {currentCategory.nameEn || currentCategory.name}
         </Text>
         <View style={styles.placeholder} />
       </View>
-
-      {currentCategory.products && currentCategory.products.length > 0 ? (
+      {/* شريط البحث */}
+      <View style={styles.searchBarContainer}>
+        <Ionicons name="search" size={20} color="#36c7f6" style={{ marginHorizontal: 8 }} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search for a product..."
+          placeholderTextColor="#aaa"
+          value={search}
+          onChangeText={setSearch}
+        />
+      </View>
+      {filteredProducts.length > 0 ? (
         <FlatList
-          data={currentCategory.products}
+          data={filteredProducts}
           renderItem={renderProduct}
           keyExtractor={(item, index) => item.id || `product-${index}`}
           numColumns={2}
@@ -172,8 +204,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 20,
-    paddingTop: 60,
-    backgroundColor: '#36c7f6',
+    paddingTop: 30,
+    // backgroundColor: '#36c7f6',
+    color: 'black',
   },
   backButton: {
     padding: 5,
@@ -181,7 +214,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontFamily: 'Poppins-SemiBold',
-    color: '#fff',
+    color: 'black',
     flex: 1,
     textAlign: 'center',
   },
@@ -199,6 +232,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Poppins-Regular',
     color: '#2c3e50',
+  },
+  loadMoreLoadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadMoreLoadingText: {
+    color: '#fff',
+    fontSize: 14,
+    fontFamily: 'Poppins-Regular',
+    marginLeft: 8,
   },
   errorContainer: {
     flex: 1,
@@ -302,5 +346,65 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Poppins-Medium',
     fontWeight: 'bold',
+  },
+  searchBarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    backgroundColor: '#fff',
+  },
+  searchInput: {
+    flex: 1,
+    padding: 10,
+    fontSize: 16,
+    fontFamily: 'Poppins-Regular',
+    color: '#2c3e50',
+  },
+  weight: {
+    fontSize: 12,
+    fontFamily: 'Poppins-Regular',
+    color: '#666',
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 2,
+  },
+  rating: {
+    fontSize: 12,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#36c7f6',
+  },
+  reviews: {
+    fontSize: 12,
+    fontFamily: 'Poppins-Regular',
+    color: '#666',
+    marginLeft: 4,
+  },
+  usdPrice: {
+    fontSize: 12,
+    fontFamily: 'Poppins-Regular',
+    color: '#666',
+  },
+  quantity: {
+    fontSize: 12,
+    fontFamily: 'Poppins-Regular',
+    color: '#666',
+  },
+  vendorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  vendor: {
+    fontSize: 12,
+    fontFamily: 'Poppins-Regular',
+    color: '#666',
+  },
+  verified: {
+    fontSize: 12,
+    fontFamily: 'Poppins-Regular',
+    color: '#36c7f6',
+    marginLeft: 4,
   },
 }); 

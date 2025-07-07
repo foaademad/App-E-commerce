@@ -49,6 +49,7 @@ const productSlice = createSlice({
             if (state.currentCategory) {
                 state.currentCategory.products = [...(state.currentCategory.products || []), ...action.payload.products];
                 state.currentCategory.hasMore = action.payload.hasMore;
+                // تحديث الصفحة الحالية
                 state.currentCategory.currentPage = (state.currentCategory.currentPage || 1) + 1;
             }
         },

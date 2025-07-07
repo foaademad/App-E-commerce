@@ -39,7 +39,7 @@ export const getProductById = (id: string) => async (dispatch: any) => {
 export const getallProductByCategoryId = (
   categoryId: string,
   page: number = 1,
-  pageSize: number = 20,
+  pageSize: number = 10,
   loadMore: boolean = false,
   name?: string,
   nameEn?: string
@@ -60,15 +60,18 @@ export const getallProductByCategoryId = (
 
     if (data.isSuccess) {
       const products = Array.isArray(data.result) ? data.result : [];
+      // تحقق من أن عدد المنتجات المستلمة يساوي pageSize لتحديد ما إذا كان هناك المزيد
+      const hasMore = products.length === pageSize;
+      
       if (loadMore) {
         dispatch(addMoreProducts({
           products,
-          hasMore: products.length === pageSize
+          hasMore: hasMore
         }));
       } else {
         dispatch(setCurrentCategory({
           products,
-          hasMore: products.length === pageSize,
+          hasMore: hasMore,
           currentPage: page,
           categoryId,
           name,
