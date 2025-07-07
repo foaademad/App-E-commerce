@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Animated, FlatList, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { getallProductByCategoryId } from '../src/store/api/productApi';
 import { RootState } from '../src/store/store';
@@ -14,6 +14,10 @@ export default function CategoryProductsScreen() {
 
   // شريط البحث
   const [search, setSearch] = useState('');
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
+  const searchAnimation = useRef(new Animated.Value(0)).current;
+  const searchInputRef = useRef<TextInput>(null);
+
   const filteredProducts = currentCategory?.products?.filter(
     (item) =>
       (item.title?.toLowerCase().includes(search.toLowerCase()) ||
@@ -27,6 +31,30 @@ export default function CategoryProductsScreen() {
       router.back();
     }
   }, [currentCategory, router]);
+
+  const toggleSearch = () => {
+    if (isSearchVisible) {
+      // إخفاء البحث
+      Animated.timing(searchAnimation, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: false,
+      }).start(() => {
+        setIsSearchVisible(false);
+        setSearch('');
+      });
+    } else {
+      // إظهار البحث
+      setIsSearchVisible(true);
+      Animated.timing(searchAnimation, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: false,
+      }).start(() => {
+        searchInputRef.current?.focus();
+      });
+    }
+  };
 
   const handleProductPress = (product: ProductDto) => {
     if (product.id) {
@@ -156,24 +184,63 @@ export default function CategoryProductsScreen() {
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <Ionicons name="arrow-back" size={24} color="#36c7f6" />
+          <Ionicons name="arrow-back" size={23} color="#36c7f6" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>
           {currentCategory.nameEn || currentCategory.name}
         </Text>
-        <View style={styles.placeholder} />
+        <TouchableOpacity
+          style={styles.searchIconButton}
+          onPress={toggleSearch}
+        >
+          <Ionicons 
+            name={isSearchVisible ? "close" : "search"} 
+            size={23} 
+            color="#36c7f6" 
+          />
+        </TouchableOpacity>
       </View>
-      {/* شريط البحث */}
-      <View style={styles.searchBarContainer}>
-        <Ionicons name="search" size={20} color="#36c7f6" style={{ marginHorizontal: 8 }} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search for a product..."
-          placeholderTextColor="#aaa"
-          value={search}
-          onChangeText={setSearch}
-        />
-      </View>
+      
+      {/* شريط البحث المتحرك */}
+      <Animated.View 
+        style={[
+          styles.searchBarContainer,
+          {
+            height: searchAnimation.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0, 60],
+            }),
+            opacity: searchAnimation,
+            transform: [{
+              translateY: searchAnimation.interpolate({
+                inputRange: [0, 1],
+                outputRange: [-20, 0],
+              }),
+            }],
+          },
+        ]}
+      >
+        <View style={styles.searchInputContainer}>
+          <Ionicons name="search" size={20} color="#36c7f6" style={styles.searchIcon} />
+          <TextInput
+            ref={searchInputRef}
+            style={styles.searchInput}
+            placeholder="Search for a product..."
+            placeholderTextColor="#aaa"
+            value={search}
+            onChangeText={setSearch}
+          />
+          {search.length > 0 && (
+            <TouchableOpacity
+              style={styles.clearButton}
+              onPress={() => setSearch('')}
+            >
+              <Ionicons name="close-circle" size={20} color="#666" />
+            </TouchableOpacity>
+          )}
+        </View>
+      </Animated.View>
+
       {filteredProducts.length > 0 ? (
         <FlatList
           data={filteredProducts}
@@ -187,7 +254,9 @@ export default function CategoryProductsScreen() {
       ) : (
         <View style={styles.emptyContainer}>
           <Ionicons name="bag-outline" size={64} color="#666" />
-          <Text style={styles.emptyText}>No products in this category</Text>
+          <Text style={styles.emptyText}>
+            {search.length > 0 ? 'No products found for your search' : 'No products in this category'}
+          </Text>
         </View>
       )}
     </View>
@@ -212,11 +281,16 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: 'Poppins-SemiBold',
     color: 'black',
     flex: 1,
     textAlign: 'center',
+  },
+  searchIconButton: {
+    padding: 5,
+    width: 34,
+    alignItems: 'center',
   },
   placeholder: {
     width: 34,
@@ -348,14 +422,30 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   searchBarContainer: {
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+    overflow: 'hidden',
+  },
+  searchInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 10,
-    backgroundColor: '#fff',
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    backgroundColor: '#f8f9fa',
+    margin: 10,
+    borderRadius: 25,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  searchIcon: {
+    marginRight: 10,
   },
   searchInput: {
     flex: 1,
-    padding: 10,
     fontSize: 16,
     fontFamily: 'Poppins-Regular',
     color: '#2c3e50',
@@ -406,5 +496,8 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-Regular',
     color: '#36c7f6',
     marginLeft: 4,
+  },
+  clearButton: {
+    padding: 5,
   },
 }); 

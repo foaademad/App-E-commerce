@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Animated, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { getCategoriesApi } from '../../src/store/api/categoryApi';
 import { getallProductByCategoryId } from '../../src/store/api/productApi';
@@ -14,8 +14,15 @@ interface CategoryItemProps {
   onPress: (category: CategoryDto) => void;
 }
 
-const CategoryItem: React.FC<CategoryItemProps> = ({ category, level, onPress }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+interface CategoryItemProps {
+  category: CategoryDto;
+  level: number;
+  onPress: (category: CategoryDto) => void;
+  isSearchMode?: boolean;
+}
+
+const CategoryItem: React.FC<CategoryItemProps> = ({ category, level, onPress, isSearchMode = false }) => {
+  const [isExpanded, setIsExpanded] = useState(isSearchMode);
   const hasChildren = category.children && category.children.length > 0;
 
   const handlePress = () => {
@@ -31,13 +38,13 @@ const CategoryItem: React.FC<CategoryItemProps> = ({ category, level, onPress })
       <TouchableOpacity
         style={[
           styles.categoryItem,
-          { paddingLeft: 20 + level * 24, backgroundColor: level === 0 ? '#fff' : '#eaf6fb', borderRadius: 18, marginVertical: 6, shadowOpacity: 0.15 },
+          {     backgroundColor: level === 0 ? '#fff' : '#eaf6fb', borderRadius: 18, marginVertical: 6, shadowOpacity: 0.15 },
         ]}
         onPress={handlePress}
         activeOpacity={0.8}
       >
         <View style={styles.categoryContent}>
-          <Ionicons name={hasChildren ? 'folder-open-outline' : 'pricetag-outline'} size={22} color={level === 0 ? '#36c7f6' : '#2c3e50'} style={{ marginRight: 10 }} />
+          <Ionicons name={hasChildren ? 'folder-open-outline' : 'pricetag-outline'} size={22} color={level === 0 ? '#36c7f6' : '#2c3e50'} style={{ marginRight: 10 , marginLeft: 16}} />
           <Text style={styles.categoryName}>
             {category.nameEn || category.name}
           </Text>
@@ -81,27 +88,85 @@ export default function CategoriesScreen() {
     [categories]
   );
 
+  // دالة للبحث في جميع الفئات (الرئيسية والفرعية)
+  const searchInAllCategories = (searchTerm: string) => {
+    if (!searchTerm.trim()) {
+      return mainCategoriesWithChildren;
+    }
+
+    const lowerSearchTerm = searchTerm.trim().toLowerCase();
+    const results: CategoryDto[] = [];
+
+    // البحث في الفئات الرئيسية
+    categories.forEach(category => {
+      if (!category.parentId) {
+        const matchesSearch = 
+          (category.nameEn && category.nameEn.toLowerCase().includes(lowerSearchTerm)) ||
+          (category.name && category.name.toLowerCase().includes(lowerSearchTerm));
+
+        if (matchesSearch) {
+          // إذا كانت الفئة الرئيسية تطابق البحث، أضفها مع أطفالها
+          results.push(category);
+        } else if (category.children && category.children.length > 0) {
+          // البحث في الفئات الفرعية
+          const matchingChildren = category.children.filter(child =>
+            (child.nameEn && child.nameEn.toLowerCase().includes(lowerSearchTerm)) ||
+            (child.name && child.name.toLowerCase().includes(lowerSearchTerm))
+          );
+
+          if (matchingChildren.length > 0) {
+            // إذا وجدت فئات فرعية تطابق البحث، أضف الفئة الرئيسية مع الفئات الفرعية المطابقة فقط
+            const categoryWithMatchingChildren = {
+              ...category,
+              children: matchingChildren
+            };
+            results.push(categoryWithMatchingChildren);
+          }
+        }
+      }
+    });
+
+    return results;
+  };
+
   const [search, setSearch] = useState('');
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
+  const searchAnimation = useRef(new Animated.Value(0)).current;
+  const searchInputRef = useRef<TextInput>(null);
   const [filteredCategories, setFilteredCategories] = useState(mainCategoriesWithChildren);
 
   useEffect(() => {
-    if (search.trim() === '') {
-      setFilteredCategories(mainCategoriesWithChildren);
-    } else {
-      const lower = search.trim().toLowerCase();
-      setFilteredCategories(
-        mainCategoriesWithChildren.filter(
-          (cat) =>
-            (cat.nameEn && cat.nameEn.toLowerCase().includes(lower)) ||
-            (cat.name && cat.name.toLowerCase().includes(lower))
-        )
-      );
-    }
-  }, [search, mainCategoriesWithChildren]);
+    const searchResults = searchInAllCategories(search);
+    setFilteredCategories(searchResults);
+  }, [search, categories]);
 
   useEffect(() => {
     dispatch(getCategoriesApi() as any);
   }, [dispatch]);
+
+  const toggleSearch = () => {
+    if (isSearchVisible) {
+      // إخفاء البحث
+      Animated.timing(searchAnimation, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: false,
+      }).start(() => {
+        setIsSearchVisible(false);
+        setSearch('');
+      });
+    } else {
+      // إظهار البحث
+      setIsSearchVisible(true);
+      Animated.timing(searchAnimation, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: false,
+      }).start(() => {
+        searchInputRef.current?.focus();
+      });
+    }
+  };
 
   const handleCategoryPress = (category: CategoryDto) => {
     if (!category.children?.length) {
@@ -119,6 +184,7 @@ export default function CategoriesScreen() {
       category={item}
       level={0}
       onPress={handleCategoryPress}
+      isSearchMode={search.length > 0}
     />
   );
 
@@ -148,32 +214,86 @@ export default function CategoriesScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Ionicons name="grid-outline" size={28} color="#fff" style={{ position: 'absolute', left: 24, top: 62 }} />
+        <Ionicons name="grid-outline" size={28} color="#36c7f6" style={{ position: 'absolute', left: 24, top: 32 }} />
         <Text style={styles.headerTitle}>Categories</Text>
+        <TouchableOpacity
+          style={styles.searchIconButton}
+          onPress={toggleSearch}
+        >
+          <Ionicons 
+            name={isSearchVisible ? "close" : "search"} 
+            size={23} 
+            color="#36c7f6" 
+          />
+        </TouchableOpacity>
       </View>
-      <View style={styles.searchBarContainer}>
-        <Ionicons name="search" size={20} color="#36c7f6" style={{ marginHorizontal: 8 }} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search for a category..."
-          placeholderTextColor="#aaa"
-          value={search}
-          onChangeText={setSearch}
-        />
-      </View>
+      
+      {/* شريط البحث المتحرك */}
+      <Animated.View 
+        style={[
+          styles.searchBarContainer,
+          {
+            height: searchAnimation.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0, 60],
+            }),
+            opacity: searchAnimation,
+            transform: [{
+              translateY: searchAnimation.interpolate({
+                inputRange: [0, 1],
+                outputRange: [-20, 0],
+              }),
+            }],
+          },
+        ]}
+      >
+        <View style={styles.searchInputContainer}>
+          <Ionicons name="search" size={20} color="#36c7f6" style={styles.searchIcon} />
+          <TextInput
+            ref={searchInputRef}
+            style={styles.searchInput}
+            placeholder="Search for a category..."
+            placeholderTextColor="#aaa"
+            value={search}
+            onChangeText={setSearch}
+          />
+          {search.length > 0 && (
+            <TouchableOpacity
+              style={styles.clearButton}
+              onPress={() => setSearch('')}
+            >
+              <Ionicons name="close-circle" size={20} color="#666" />
+            </TouchableOpacity>
+          )}
+        </View>
+      </Animated.View>
+
       {filteredCategories.length > 0 ? (
-        <FlatList
-          data={filteredCategories}
-          renderItem={renderCategory}
-          keyExtractor={(item, index) => item.id || `category-${index}`}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.listContainer}
-        />
+        <>
+          {search.length > 0 && (
+            <View style={styles.searchResultsHeader}>
+              <Text style={styles.searchResultsText}>
+                Found {filteredCategories.length} category{filteredCategories.length !== 1 ? 'ies' : ''}
+              </Text>
+            </View>
+          )}
+          <FlatList
+            data={filteredCategories}
+            renderItem={renderCategory}
+            keyExtractor={(item, index) => item.id || `category-${index}`}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.listContainer}
+          />
+        </>
       ) : (
         <View style={styles.emptyContainer}>
           <Ionicons name="grid-outline" size={64} color="#36c7f6" style={{ marginBottom: 8 }} />
-          <Text style={styles.emptyText}>No matching categories</Text>
-          <Text style={styles.emptySubText}>Try searching with a different name or check if categories exist</Text>
+          <Text style={styles.emptyText}>
+            {search.length > 0 ? 'No matching categories found' : 'No categories available'}
+          </Text>
+          <Text style={styles.emptySubText}>
+            {search.length > 0 ? 'Try searching with a different name' : 'Check if categories exist'}
+          </Text>
         </View>
       )}
     </View>
@@ -187,47 +307,38 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 20,
-    paddingTop: 60,
-    backgroundColor: '#36c7f6',
+    paddingTop: 30,
+  
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
-    shadowColor: '#36c7f6',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.18,
-    shadowRadius: 8,
-    elevation: 8,
+    // shadowColor: '#36c7f6',
+    // shadowOffset: { width: 0, height: 4 },
+    // shadowOpacity: 0.18,
+    // shadowRadius: 8,
+    // elevation: 8,
     marginBottom: 8,
   },
   headerTitle: {
-    fontSize: 26,
+    fontSize: 24,
     fontFamily: 'Poppins-SemiBold',
-    color: '#fff',
+    color: 'black',
     textAlign: 'center',
     letterSpacing: 1,
   },
   searchBarContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
+
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+    overflow: 'hidden',
     marginHorizontal: 16,
     marginTop: -24,
     marginBottom: 8,
-    borderRadius: 16,
-    paddingHorizontal: 8,
-    shadowColor: '#36c7f6',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
-    elevation: 2,
-    height: 44,
   },
   searchInput: {
     flex: 1,
     fontSize: 16,
     fontFamily: 'Poppins-Regular',
     color: '#2c3e50',
-    paddingVertical: 8,
-    backgroundColor: 'transparent',
   },
   loadingContainer: {
     flex: 1,
@@ -308,7 +419,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 24,
     marginTop: 2,
     borderRadius: 12,
-    paddingLeft: 8,
+
     borderLeftWidth: 2,
     borderLeftColor: '#36c7f6',
   },
@@ -332,5 +443,43 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     marginTop: 8,
+  },
+  searchIconButton: {
+    position: 'absolute',
+    right: 24,
+    top: 32,
+  },
+  searchInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    backgroundColor: '#f8f9fa',
+    margin: 10,
+    borderRadius: 25,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  searchIcon: {
+    marginRight: 10,
+  },
+  clearButton: {
+    padding: 5,
+  },
+  searchResultsHeader: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: '#f8f9fa',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  searchResultsText: {
+    fontSize: 14,
+    fontFamily: 'Poppins-Medium',
+    color: '#36c7f6',
+    textAlign: 'center',
   },
 });
