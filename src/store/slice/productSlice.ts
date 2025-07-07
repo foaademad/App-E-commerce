@@ -1,10 +1,11 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { ProductDetailsDto, ProductDto } from "../utility/interfaces/productInterface";
+import { CategoryDto, ProductDetailsDto, ProductDto } from "../utility/interfaces/productInterface";
 
 const initialState = {
     productsBest: [] as ProductDto[],
     productsNew: [] as ProductDto[],
     currentProduct: null as ProductDetailsDto | null,
+    currentCategory: null as CategoryDto | null,
     loading: false,
     error: null as string | null,
 }
@@ -28,8 +29,11 @@ const productSlice = createSlice({
         setCurrentProduct: (state, action: PayloadAction<ProductDetailsDto | null>) => {
             state.currentProduct = action.payload;
         },
+        setCurrentCategory: (state, action: PayloadAction<CategoryDto | null>) => {
+            state.currentCategory = action.payload;
+        },
     },
 });
 
-export const { getProductsBest, getProductsNew, setLoading, setError, setCurrentProduct } = productSlice.actions;
+export const { getProductsBest, getProductsNew, setLoading, setError, setCurrentProduct, setCurrentCategory } = productSlice.actions;
 export default productSlice.reducer;

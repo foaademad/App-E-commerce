@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, Dimensions, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from "react-i18next";
+import { Dimensions, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useLanguage } from "../../src/context/LanguageContext";
 
 const { width: windowWidth } = Dimensions.get('window');
@@ -146,7 +146,7 @@ const Carousel: React.FC<CarouselProps> = ({
       <View style={styles.pagination}>
         {data.map((_, index) => (
           <TouchableOpacity
-            key={index}
+            key={`dot-${index}`}
             style={index === activeIndex ? styles.activeDot : styles.dot}
             onPress={() => handleDotPress(index)}
           />

@@ -12,7 +12,6 @@ import {
   Globe,
   Heart,
   HelpCircle,
-  History,
   LogOut,
   MapPin,
   Package,
@@ -138,7 +137,7 @@ const ProfileScreen = () => {
         <Text style={styles.sectionTitle}>{t('profile.my_account')}</Text>
         {menuItems.map((item, index) => (
           <TouchableOpacity
-            key={index}
+            key={`menu-${item.title}-${index}`}
             style={[styles.menuItem, { direction: isRTL ? 'rtl' : 'ltr' }]}
             onPress={item.onPress}
           >
@@ -163,7 +162,7 @@ const ProfileScreen = () => {
         <Text style={styles.sectionTitle}>{t('profile.settings.title')}</Text>
         {settingsItems.map((item, index) => (
           <TouchableOpacity
-            key={index}
+            key={`setting-${item.title}-${index}`}
             style={[styles.menuItem, { direction: isRTL ? 'rtl' : 'ltr' }]}
             onPress={item.onPress}
           >

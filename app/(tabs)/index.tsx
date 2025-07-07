@@ -4,20 +4,19 @@ import { Search } from 'lucide-react-native';
 import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, TextInput, View } from 'react-native';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { getProducts } from '../../src/store/api/productApi';
-import { AppDispatch } from '../../src/store/store';
+import { AppDispatch, RootState } from '../../src/store/store';
 import EnhancedCarousel from '../home/banners/Banners';
 import BestSellers from '../home/bestSellers/BestSellers';
 import Categories from '../home/categories/Categories';
 import DailyDeals from '../home/dailyDeals/DailyDeals';
 import NewArrivals from '../home/newArrivals/NewArrivals';
-
 const HomeScreen = () => {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const dispatch = useDispatch<AppDispatch>();
-
+  const { currentCategory } = useSelector((state: RootState) => state.product);
   useEffect(() => {
     dispatch(getProducts());
   }, [dispatch]);

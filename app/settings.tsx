@@ -1,6 +1,6 @@
 import { useLanguage } from '@/src/context/LanguageContext';
 import { useRouter } from 'expo-router';
-import { Bell, ChevronLeft, ChevronRight, FileText, Globe, Info, Moon, Shield, Sun } from 'lucide-react-native';
+import { Bell, ChevronLeft, ChevronRight, FileText, Globe, Info, Shield } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -79,7 +79,7 @@ const SettingsScreen = () => {
           <Text style={styles.sectionTitle}>{t('profile.settings.title')}</Text>
           {settingsSections.map((item, index) => (
             <TouchableOpacity
-              key={index}
+              key={`setting-${item.title}-${index}`}
               style={styles.settingItem}
               onPress={item.onPress}
             >
@@ -100,7 +100,7 @@ const SettingsScreen = () => {
           <Text style={styles.sectionTitle}>{t('profile.settings.about')}</Text>
           {aboutSections.map((item, index) => (
             <TouchableOpacity
-              key={index}
+              key={`about-${item.title}-${index}`}
               style={styles.settingItem}
               onPress={item.onPress}
             >

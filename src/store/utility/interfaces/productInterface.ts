@@ -225,3 +225,35 @@ export interface ProductBaseDto {
     };
   }
   
+export interface CategoryDto {
+    categoryId: string;
+    name: string;
+    parentId: string | null;
+    children: CategoryDto[];
+    products: ProductDto[];
+    subCategories: CategoryDto[];
+    nameEn: string;
+    nameAr: string;
+    imageUrl: string;
+    isActive: boolean;
+    isDeleted: boolean;
+    createdTime: Date;
+    updatedTime: Date;
+    isTitleManuallyTranslated: boolean;
+    originalTitle: string;
+  }
+  
+// New interface for the category products API response
+export interface CategoryProductsResponse {
+  message: string;
+  isSuccess: boolean;
+  statusCode: number;
+  result: {
+    category: CategoryDto;
+    products: ProductDto[];
+    totalCount: number;
+    page: number;
+    pageSize: number;
+  };
+}
+  

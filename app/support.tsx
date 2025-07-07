@@ -80,7 +80,7 @@ const HelpSupportScreen = () => {
           <Text style={styles.sectionTitle}>{t('profile.help_support.faq')}</Text>
           {faqItems.map((item, index) => (
             <TouchableOpacity
-              key={index}
+              key={`faq-${item.question}-${index}`}
               style={styles.faqItem}
               onPress={() => toggleFaq(index)}
             >
@@ -104,7 +104,7 @@ const HelpSupportScreen = () => {
           <Text style={styles.sectionTitle}>{t('profile.help_support.contact')}</Text>
           {contactOptions.map((option, index) => (
             <TouchableOpacity
-              key={index}
+              key={`contact-${option.title}-${index}`}
               style={styles.contactItem}
               onPress={option.action}
             >

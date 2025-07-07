@@ -17,10 +17,11 @@ export default function TabLayout() {
       icon: 'home-outline',
     },
     {
-      name: 'explore',
-      title: { ar: 'استكشاف', en: 'Explore' },
-      icon: 'search-outline',
+      name: 'categories',
+      title: { ar: 'الكاتيجوري', en: 'Categories' },
+      icon: 'grid-outline',
     },
+   
     {
       name: 'whishList',
       title: { ar: 'المفضلة', en: 'WhishList' },

@@ -1,15 +1,15 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    Image,
-    Linking,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Image,
+  Linking,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Video from "react-native-video";
 import { useDispatch, useSelector } from "react-redux";
@@ -116,12 +116,15 @@ export default function ProductDetails() {
     <ScrollView style={styles.container}>
       {/* Back Button */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
           <Text style={styles.backArrow}>←</Text>
           <Text style={styles.backText}>Back</Text>
         </TouchableOpacity>
       </View>
-      
+
       {/* Product Images */}
       <ScrollView
         horizontal
@@ -132,7 +135,7 @@ export default function ProductDetails() {
         {product.pictures?.length ? (
           product.pictures.map((pic, idx) => (
             <Image
-              key={idx}
+              key={pic.url || `pic-${idx}`}
               source={{ uri: pic.url }}
               style={styles.mainImage}
               resizeMode="cover"
@@ -160,7 +163,7 @@ export default function ProductDetails() {
           USD
         </Text>
 
-        <View style={styles.videoContainer}>
+        {product.videos?.[0]?.url ? <View style={styles.videoContainer}>
           {product.videos?.[0]?.url ? (
             <Video
               source={{ uri: product.videos[0].url }}
@@ -175,9 +178,9 @@ export default function ProductDetails() {
               resizeMode="contain"
             />
           ) : (
-            <Text style={styles.desc}>No video available</Text>
+            <Text style={[styles.desc]}>No video available</Text>
           )}
-        </View>
+        </View>: <Text style={[styles.desc]}>No video available</Text>}  
         <Text style={styles.label}>
           Brand: <Text style={styles.value}>{product.brandName}</Text>
         </Text>
@@ -234,7 +237,7 @@ export default function ProductDetails() {
               />
               {item.configurators?.map((c, i) => (
                 <Text
-                  key={i}
+                  key={`${c.pid}-${c.vid}-${i}`}
                   style={{ fontSize: 13, color: "#222", fontWeight: "bold" }}
                 >
                   {c.pid}: <Text style={{ fontWeight: "normal" }}>{c.vid}</Text>
@@ -328,7 +331,12 @@ export default function ProductDetails() {
           }}
         >
           <Image
-            source={{ uri: featured.shopLogo || vendor?.displayPictureUrl || vendor?.pictureUrl }}
+            source={{
+              uri:
+                featured.shopLogo ||
+                vendor?.displayPictureUrl ||
+                vendor?.pictureUrl,
+            }}
             style={styles.vendorImageLarge}
           />
           <View style={{ marginLeft: 14 }}>
@@ -347,7 +355,8 @@ export default function ProductDetails() {
                 Level: {vendor?.credit?.level ?? "-"}
               </Text>
               <Text style={styles.vendorScore}>
-                {" "}| Score: {vendor?.credit?.score ?? "-"}
+                {" "}
+                | Score: {vendor?.credit?.score ?? "-"}
               </Text>
             </View>
           </View>
@@ -355,9 +364,15 @@ export default function ProductDetails() {
         <View style={styles.vendorInfoRow}>
           <Text style={styles.vendorInfoLabel}>Shop Logo:</Text>
           {featured.shopLogo ? (
-            <Image source={{ uri: featured.shopLogo }} style={styles.vendorLogo} />
+            <Image
+              source={{ uri: featured.shopLogo }}
+              style={styles.vendorLogo}
+            />
           ) : vendor?.pictureUrl ? (
-            <Image source={{ uri: vendor.pictureUrl }} style={styles.vendorLogo} />
+            <Image
+              source={{ uri: vendor.pictureUrl }}
+              style={styles.vendorLogo}
+            />
           ) : (
             <Text style={styles.vendorInfoValue}>-</Text>
           )}
@@ -366,7 +381,10 @@ export default function ProductDetails() {
           <Text style={styles.vendorInfoLabel}>Shop URL:</Text>
           {featured.shopUrl ? (
             <Text
-              style={[styles.vendorInfoValue, { color: "#36c7f6", textDecorationLine: "underline" }]}
+              style={[
+                styles.vendorInfoValue,
+                { color: "#36c7f6", textDecorationLine: "underline" },
+              ]}
               onPress={() => Linking.openURL(featured.shopUrl)}
             >
               {featured.shopUrl}
@@ -385,7 +403,9 @@ export default function ProductDetails() {
         </View>
         <View style={styles.vendorInfoRow}>
           <Text style={styles.vendorInfoLabel}>Sales (30d):</Text>
-          <Text style={styles.vendorInfoValue}>{featured.salesVolume30d ?? "-"}</Text>
+          <Text style={styles.vendorInfoValue}>
+            {featured.salesVolume30d ?? "-"}
+          </Text>
         </View>
         <View style={styles.vendorInfoRow}>
           <Text style={styles.vendorInfoLabel}>DSR Score:</Text>
@@ -397,11 +417,15 @@ export default function ProductDetails() {
         </View>
         <View style={styles.vendorInfoRow}>
           <Text style={styles.vendorInfoLabel}>Level Ratio:</Text>
-          <Text style={styles.vendorInfoValue}>{featured.levelRatio ?? "-"}</Text>
+          <Text style={styles.vendorInfoValue}>
+            {featured.levelRatio ?? "-"}
+          </Text>
         </View>
         <View style={styles.vendorInfoRow}>
           <Text style={styles.vendorInfoLabel}>Grade Code:</Text>
-          <Text style={styles.vendorInfoValue}>{featured.gradeCode ?? "-"}</Text>
+          <Text style={styles.vendorInfoValue}>
+            {featured.gradeCode ?? "-"}
+          </Text>
         </View>
         <View style={styles.vendorInfoRow}>
           <Text style={styles.vendorInfoLabel}>User ID:</Text>
@@ -443,20 +467,47 @@ export default function ProductDetails() {
 
       {/* Tabs */}
       <View style={styles.tabsRow}>
-        <TouchableOpacity onPress={() => setActiveTab("specs")}
+        <TouchableOpacity
+          onPress={() => setActiveTab("specs")}
           style={[styles.tabBtn, activeTab === "specs" && styles.activeTabBtn]}
         >
-          <Text style={[styles.tabText, activeTab === "specs" && styles.activeTabText]}>Specifications</Text>
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "specs" && styles.activeTabText,
+            ]}
+          >
+            Specifications
+          </Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => setActiveTab("desc")}
+        <TouchableOpacity
+          onPress={() => setActiveTab("desc")}
           style={[styles.tabBtn, activeTab === "desc" && styles.activeTabBtn]}
         >
-          <Text style={[styles.tabText, activeTab === "desc" && styles.activeTabText]}>Description</Text>
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "desc" && styles.activeTabText,
+            ]}
+          >
+            Description
+          </Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => setActiveTab("reviews")}
-          style={[styles.tabBtn, activeTab === "reviews" && styles.activeTabBtn]}
+        <TouchableOpacity
+          onPress={() => setActiveTab("reviews")}
+          style={[
+            styles.tabBtn,
+            activeTab === "reviews" && styles.activeTabBtn,
+          ]}
         >
-          <Text style={[styles.tabText, activeTab === "reviews" && styles.activeTabText]}>Reviews</Text>
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "reviews" && styles.activeTabText,
+            ]}
+          >
+            Reviews
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -466,7 +517,7 @@ export default function ProductDetails() {
           <Text style={styles.sectionTitle}>General Information</Text>
           <View style={styles.specsTable}>
             {generalInfo.map((item: any, idx: any) => (
-              <View key={idx} style={styles.specsRow}>
+              <View key={`${item.label}-${idx}`} style={styles.specsRow}>
                 <Text style={styles.specsLabel}>{item.label}</Text>
                 <Text style={styles.specsValue}>{item.value}</Text>
               </View>
@@ -477,10 +528,26 @@ export default function ProductDetails() {
       {activeTab === "desc" && (
         <View style={styles.specsCard}>
           <Text style={styles.sectionTitle}>Product Description</Text>
-          <Text style={styles.desc}>{product?.title || "No description available."}</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: 10 }}>
+          <Text style={styles.desc}>
+            {product?.title || "No description available."}
+          </Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{ marginVertical: 10 }}
+          >
             {(product?.pictures || []).map((pic, idx) => (
-              <Image key={idx} source={{ uri: pic.url }} style={{ width: 120, height: 120, borderRadius: 10, marginRight: 10, backgroundColor: '#f4f4f4' }} />
+              <Image
+                key={pic.url || `pic-${idx}`}
+                source={{ uri: pic.url }}
+                style={{
+                  width: 120,
+                  height: 120,
+                  borderRadius: 10,
+                  marginRight: 10,
+                  backgroundColor: "#f4f4f4",
+                }}
+              />
             ))}
           </ScrollView>
         </View>
@@ -490,25 +557,35 @@ export default function ProductDetails() {
           <Text style={styles.sectionTitle}>Customer Reviews</Text>
           {Array.isArray(reviews) && reviews?.length > 0 ? (
             reviews?.map((review: any, idx: any) => (
-              <View key={idx} style={styles.reviewCard}>
+              <View key={`${review.userNick}-${review.createdDate}-${idx}`} style={styles.reviewCard}>
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
                   <Text style={styles.reviewUser}>{review.userNick}</Text>
                   <Text style={styles.reviewLevel}>
-                    {review.featuredValues?.find((f: any) => f.name === "raterLevel")?.value || ""}
+                    {review.featuredValues?.find(
+                      (f: any) => f.name === "raterLevel"
+                    )?.value || ""}
                   </Text>
                   <Text style={styles.reviewDate}>
                     {new Date(review.createdDate).toLocaleDateString()}
                   </Text>
                 </View>
-                <Text style={styles.reviewRating}>{"★".repeat(review.rating)}</Text>
+                <Text style={styles.reviewRating}>
+                  {"★".repeat(review.rating)}
+                </Text>
                 <Text style={styles.reviewContent}>{review.content}</Text>
                 {review.images && review.images.length > 0 && (
                   <ScrollView horizontal style={{ marginTop: 6 }}>
                     {review.images.map((img: any, i: any) => (
                       <Image
-                        key={i}
+                        key={img || `img-${i}`}
                         source={{ uri: img }}
-                        style={{ width: 60, height: 60, borderRadius: 8, marginRight: 8, backgroundColor: "#f4f4f4" }}
+                        style={{
+                          width: 60,
+                          height: 60,
+                          borderRadius: 8,
+                          marginRight: 8,
+                          backgroundColor: "#f4f4f4",
+                        }}
                       />
                     ))}
                   </ScrollView>
@@ -690,7 +767,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   relatedPrice: { fontSize: 13, color: "#36c7f6", fontWeight: "bold" },
-  videoContainer: {
+   videoContainer: {
     width: "100%",
     height: 220,
     marginBottom: 10,

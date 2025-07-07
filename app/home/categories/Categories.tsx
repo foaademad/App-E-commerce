@@ -36,7 +36,7 @@ const CategoryItem = ({
 
   return (
     <TouchableOpacity
-      onPress={() => onPress(item.id)}
+      onPress={() => onPress(item.categoryId || item.id || 'all')}
       style={{
         paddingHorizontal: 16,
         paddingVertical: 12,
@@ -77,7 +77,7 @@ const ModalCategoryItem = ({
 
   return (
     <TouchableOpacity
-      onPress={() => onPress(item.id)}
+      onPress={() => onPress(item.categoryId || item.id || 'all')}
       style={{
         paddingHorizontal: 16,
         paddingVertical: 12,
@@ -114,7 +114,7 @@ const Categories = () => {
     .filter((cat) => cat.parentId === null)
     .flatMap((cat) => cat.children || []);
 
-  const allCategory = { id: 'all', nameEn: 'All' } as CategoryDto;
+  const allCategory = { categoryId: 'all', id: 'all', nameEn: 'All' } as CategoryDto;
   const categoriesWithAll = [allCategory, ...subCategories];
 
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -131,7 +131,7 @@ const Categories = () => {
     setSelectedCategory(categoryId);
     setModalVisible(false);
 
-    const index = categoriesWithAll.findIndex((cat) => cat.id === categoryId);
+    const index = categoriesWithAll.findIndex((cat) => (cat.categoryId || cat.id) === categoryId);
     setTimeout(() => {
       if (flatListRef.current && index >= 0) {
         flatListRef.current.scrollToIndex({
@@ -150,7 +150,7 @@ const Categories = () => {
   const renderCategoryItem = ({ item }: { item: CategoryDto }) => (
     <CategoryItem
       item={item}
-      isSelected={selectedCategory === item.id}
+      isSelected={selectedCategory === (item.categoryId || item.id)}
       onPress={handleCategoryPress}
     />
   );
@@ -175,7 +175,7 @@ const Categories = () => {
           <FlatList
             ref={flatListRef}
             data={categoriesWithAll}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item) => item.categoryId || item.id || `category-${Math.random()}`}
             renderItem={renderCategoryItem}
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -286,9 +286,9 @@ const Categories = () => {
             >
               {categoriesWithAll.map((category) => (
                 <ModalCategoryItem
-                  key={category.id}
+                  key={category.categoryId || category.id}
                   item={category}
-                  isSelected={selectedCategory === category.id}
+                  isSelected={selectedCategory === (category.categoryId || category.id)}
                   onPress={handleCategoryPress}
                 />
               ))}
