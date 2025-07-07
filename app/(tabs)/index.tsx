@@ -141,7 +141,12 @@ const HomeScreen = () => {
       return;
     }
     const lower = text.toLowerCase();
-    const filtered = [...productsBest, ...productsNew].filter(
+    // Combine products and remove duplicates based on id
+    const allProducts = [...productsBest, ...productsNew];
+    const uniqueProducts = allProducts.filter((item, index, self) => 
+      index === self.findIndex(p => p.id === item.id)
+    );
+    const filtered = uniqueProducts.filter(
       (item) =>
         item.title?.toLowerCase().includes(lower) ||
         item.name?.toLowerCase().includes(lower) ||
@@ -206,7 +211,7 @@ const HomeScreen = () => {
         <FlatList
           data={searchResults}
           renderItem={renderProduct}
-          keyExtractor={(item, index) => `${item.id}-search-${index}`}
+          keyExtractor={(item) => `search-${item.id}`}
           contentContainerStyle={{ padding: 10 }}
           ListEmptyComponent={<Text style={{ textAlign: 'center', color: '#888', marginTop: 30 }}>{t('No products found')}</Text>}
         />

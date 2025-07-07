@@ -3,14 +3,14 @@ import { ChevronDown, X } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Dimensions,
-  FlatList,
-  Modal,
-  Pressable,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
+    Dimensions,
+    FlatList,
+    Modal,
+    Pressable,
+    ScrollView,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { useLanguage } from "../../../src/context/LanguageContext";
@@ -201,7 +201,7 @@ const Categories = () => {
           <FlatList
             ref={flatListRef}
             data={categoriesWithAll}
-            keyExtractor={(item) => item.categoryId || item.id || `category-${Math.random()}`}
+            keyExtractor={(item, index) => item.categoryId || item.id || `category-${index}`}
             renderItem={renderCategoryItem}
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -310,9 +310,9 @@ const Categories = () => {
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{ paddingBottom: 16 }}
             >
-              {categoriesWithAll.map((category) => (
+              {categoriesWithAll.map((category, index) => (
                 <ModalCategoryItem
-                  key={category.categoryId || category.id}
+                  key={category.categoryId || category.id || `modal-category-${index}`}
                   item={category}
                   isSelected={selectedCategory === (category.categoryId || category.id)}
                   onPress={handleCategoryPress}
