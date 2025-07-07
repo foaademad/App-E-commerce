@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import { ChevronDown, X } from "lucide-react-native";
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -14,6 +15,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { useLanguage } from "../../../src/context/LanguageContext";
 import { getCategoriesApi } from "../../../src/store/api/categoryApi";
+import { getallProductByCategoryId } from "../../../src/store/api/productApi";
 import { AppDispatch, RootState } from "../../../src/store/store";
 import { CategoryDto } from "../../../src/store/utility/interfaces/categoryInterface";
 
@@ -108,6 +110,7 @@ const Categories = () => {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
   const { categories, loading } = useSelector((state: RootState) => state.category);
 
   const subCategories: CategoryDto[] = categories
@@ -131,13 +134,36 @@ const Categories = () => {
     setSelectedCategory(categoryId);
     setModalVisible(false);
 
+    const selected = categoriesWithAll.find(
+      (cat) => (cat.categoryId || cat.id) === categoryId
+    );
+
+    // إذا كانت الفئة "الكل" لا تذهب لأي تفاصيل
+    if (categoryId === "all") return;
+
+    // جلب المنتجات الخاصة بالفئة
+    dispatch(
+      getallProductByCategoryId(
+        categoryId,
+        1,
+        10,
+        false,
+        selected?.name,
+        selected?.nameEn
+      ) as any
+    );
+
+    // الانتقال لصفحة تفاصيل الكاتيجوري
+    router.push("/category-products");
+
+    // تحريك الشريط الأفقي للفئة المختارة
     const index = categoriesWithAll.findIndex((cat) => (cat.categoryId || cat.id) === categoryId);
     setTimeout(() => {
       if (flatListRef.current && index >= 0) {
         flatListRef.current.scrollToIndex({
           index,
           animated: true,
-          viewPosition: 0.5, 
+          viewPosition: 0.5,
         });
       }
     }, 300);
