@@ -108,7 +108,7 @@ export default function CategoriesScreen() {
       const categoryId = category.id;
       console.log("Selected categoryId: ", categoryId);
       if (categoryId) {
-        dispatch(getallProductByCategoryId(categoryId) as any);
+        dispatch(getallProductByCategoryId(categoryId, 1, 20, false, category.name, category.nameEn) as any);
         router.push('category-products' as any);
       }
     }

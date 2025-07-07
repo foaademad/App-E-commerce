@@ -1,6 +1,6 @@
-import { getProductsBest, getProductsNew, setCurrentCategory, setCurrentProduct, setError, setLoading } from "../slice/productSlice";
+import { addMoreProducts, getProductsBest, getProductsNew, setCurrentCategory, setCurrentProduct, setError, setLoading, setLoadingMore } from "../slice/productSlice";
 import api from "../utility/api/api";
-import { CategoryProductsResponse, ProductDetailsDto, ProductsHomeResponse } from "../utility/interfaces/productInterface";
+import { ProductDetailsDto, ProductsHomeResponse } from "../utility/interfaces/productInterface";
 
 export const getProducts = () => async (dispatch: any) => {
     try {
@@ -36,31 +36,56 @@ export const getProductById = (id: string) => async (dispatch: any) => {
 }
 
 
-export const getallProductByCategoryId = (categoryId: string) => async (dispatch: any) => {
-    if (!categoryId || categoryId === 'undefined') {
-        dispatch(setError('Invalid category ID'));
-        return;
+export const getallProductByCategoryId = (
+  categoryId: string,
+  page: number = 1,
+  pageSize: number = 20,
+  loadMore: boolean = false,
+  name?: string,
+  nameEn?: string
+) => async (dispatch: any) => {
+  if (!categoryId || categoryId === 'undefined') {
+    dispatch(setError('Invalid category ID'));
+    return;
+  }
+
+  try {
+    if (!loadMore) {
+      dispatch(setLoading(true));
+    } else {
+      dispatch(setLoadingMore(true));
     }
-    
-    try {
-        dispatch(setLoading(true));
-        const response = await api.get(`/Product/getalltocatgeory?categoryId=${categoryId}&page=1&pageSize=10`);
-        const data = response.data as CategoryProductsResponse;
-        
-        if (data.isSuccess) {
-            // إنشاء كائن CategoryDto مع المنتجات
-            const categoryWithProducts = {
-                ...data.result.category,
-                products: data.result.products
-            };
-            dispatch(setCurrentCategory(categoryWithProducts));
-        } else {
-            dispatch(setError(data.message || 'Failed to fetch category products'));
-        }
-    } catch (error: any) {
-        const errorMessage = error?.response?.data?.message || error?.message || 'An error occurred';
-        dispatch(setError(errorMessage));
-    } finally {
-        dispatch(setLoading(false));
+    const response = await api.get(`/Product/getalltocatgeory?categoryId=${categoryId}&page=${page}&pageSize=${pageSize}`);
+    const data = response.data;
+
+    if (data.isSuccess) {
+      const products = Array.isArray(data.result) ? data.result : [];
+      if (loadMore) {
+        dispatch(addMoreProducts({
+          products,
+          hasMore: products.length === pageSize
+        }));
+      } else {
+        dispatch(setCurrentCategory({
+          products,
+          hasMore: products.length === pageSize,
+          currentPage: page,
+          categoryId,
+          name,
+          nameEn
+        }));
+      }
+    } else {
+      dispatch(setError(data.message || 'Failed to fetch category products'));
     }
-}
+  } catch (error: any) {
+    const errorMessage = error?.response?.data?.message || error?.message || 'An error occurred';
+    dispatch(setError(errorMessage));
+  } finally {
+    if (!loadMore) {
+      dispatch(setLoading(false));
+    } else {
+      dispatch(setLoadingMore(false));
+    }
+  }
+};

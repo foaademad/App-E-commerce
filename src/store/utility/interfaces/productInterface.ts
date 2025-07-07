@@ -241,6 +241,8 @@ export interface CategoryDto {
     updatedTime: Date;
     isTitleManuallyTranslated: boolean;
     originalTitle: string;
+    hasMore?: boolean;
+    currentPage?: number;
   }
   
 // New interface for the category products API response

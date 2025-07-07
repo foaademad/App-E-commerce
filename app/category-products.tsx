@@ -3,14 +3,14 @@ import { useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
 import { ActivityIndicator, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { getallProductByCategoryId } from '../../src/store/api/productApi';
-import { RootState } from '../../src/store/store';
-import { ProductDto } from '../../src/store/utility/interfaces/productInterface';
+import { getallProductByCategoryId } from '../src/store/api/productApi';
+import { RootState } from '../src/store/store';
+import { ProductDto } from '../src/store/utility/interfaces/productInterface';
 
 export default function CategoryProductsScreen() {
   const dispatch = useDispatch();
   const router = useRouter();
-  const { currentCategory, loading, error } = useSelector((state: RootState) => state.product);
+  const { currentCategory, loading, loadingMore, error } = useSelector((state: RootState) => state.product);
 
   useEffect(() => {
     // إذا لم يكن هناك كاتيجوري محدد، ارجع للصفحة السابقة
@@ -22,6 +22,16 @@ export default function CategoryProductsScreen() {
   const handleProductPress = (product: ProductDto) => {
     if (product.id) {
       router.push(`/product/${product.id}`);
+    }
+  };
+
+  const handleLoadMore = () => {
+    if (currentCategory && currentCategory.hasMore && !loadingMore) {
+      const nextPage = (currentCategory.currentPage || 1) + 1;
+      const categoryId = currentCategory.categoryId;
+      if (categoryId) {
+        dispatch(getallProductByCategoryId(categoryId, nextPage, 20, true) as any);
+      }
     }
   };
 
@@ -50,6 +60,27 @@ export default function CategoryProductsScreen() {
     </TouchableOpacity>
   );
 
+  const renderLoadMoreButton = () => {
+    if (!currentCategory?.hasMore) return null;
+    
+    return (
+      <View style={styles.loadMoreContainer}>
+        <TouchableOpacity
+          style={styles.loadMoreButton}
+          onPress={handleLoadMore}
+          disabled={loadingMore}
+          activeOpacity={0.8}
+        >
+          {loadingMore ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Text style={styles.loadMoreText}>Load More Products</Text>
+          )}
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -71,7 +102,7 @@ export default function CategoryProductsScreen() {
             if (currentCategory) {
               const categoryId = currentCategory.categoryId;
               if (categoryId) {
-                dispatch(getallProductByCategoryId(categoryId) as any);
+                dispatch(getallProductByCategoryId(categoryId, 1, 20, false) as any);
               }
             }
           }}
@@ -119,6 +150,7 @@ export default function CategoryProductsScreen() {
           numColumns={2}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.productsList}
+          ListFooterComponent={renderLoadMoreButton}
         />
       ) : (
         <View style={styles.emptyContainer}>
@@ -249,5 +281,26 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     marginTop: 16,
+  },
+  loadMoreContainer: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  loadMoreButton: {
+    backgroundColor: '#36c7f6',
+    paddingHorizontal: 30,
+    paddingVertical: 12,
+    borderRadius: 25,
+    shadowColor: '#36c7f6',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  loadMoreText: {
+    color: '#fff',
+    fontSize: 16,
+    fontFamily: 'Poppins-Medium',
+    fontWeight: 'bold',
   },
 }); 
