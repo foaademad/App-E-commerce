@@ -14,6 +14,12 @@ const categorySlice = createSlice({
         getCategories: (state, action: PayloadAction<CategoryDto[]>) => {
             state.categories = action.payload;
         },
+        addCategories: (state, action: PayloadAction<CategoryDto[]>) => {
+            // دمج النتائج الجديدة مع القديمة بدون تكرار حسب id
+            const existingIds = new Set(state.categories.map(cat => cat.id));
+            const newOnes = action.payload.filter(cat => !existingIds.has(cat.id));
+            state.categories = [...state.categories, ...newOnes];
+        },
         setLoading: (state, action: PayloadAction<boolean>) => {
             state.loading = action.payload;
         },
@@ -23,5 +29,5 @@ const categorySlice = createSlice({
     },
 });
 
-export const { getCategories, setLoading, setError } = categorySlice.actions;
+export const { getCategories, addCategories, setLoading, setError } = categorySlice.actions;
 export default categorySlice.reducer;

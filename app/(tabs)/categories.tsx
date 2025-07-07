@@ -79,6 +79,10 @@ export default function CategoriesScreen() {
   const router = useRouter();
   const { categories, loading, error } = useSelector((state: RootState) => state.category);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+
   const mainCategoriesWithChildren = useMemo(
     () =>
       categories.filter(
@@ -141,7 +145,10 @@ export default function CategoriesScreen() {
   }, [search, categories]);
 
   useEffect(() => {
-    dispatch(getCategoriesApi() as any);
+    // عند أول تحميل الصفحة
+    setCurrentPage(1);
+    setHasMore(true);
+    dispatch(getCategoriesApi(1, 20, false) as any);
   }, [dispatch]);
 
   const toggleSearch = () => {
@@ -187,6 +194,21 @@ export default function CategoriesScreen() {
       isSearchMode={search.length > 0}
     />
   );
+
+  // زر تحميل المزيد
+  const handleLoadMore = async () => {
+    if (loadingMore || !hasMore || search.length > 0) return;
+    setLoadingMore(true);
+    const nextPage = currentPage + 1;
+    // جلب الصفحة التالية
+    await dispatch<any>(getCategoriesApi(nextPage, 20, true));
+    setCurrentPage(nextPage);
+    // إذا كانت النتائج أقل من 20، لا يوجد المزيد
+    if (categories.length % 20 !== 0) {
+      setHasMore(false);
+    }
+    setLoadingMore(false);
+  };
 
   if (loading) {
     return (
@@ -283,6 +305,24 @@ export default function CategoriesScreen() {
             keyExtractor={(item, index) => item.id || `category-${index}`}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.listContainer}
+            ListFooterComponent={
+              !search.length && hasMore ? (
+                <View style={{ padding: 20, alignItems: 'center' }}>
+                  <TouchableOpacity
+                    style={{ backgroundColor: '#36c7f6', paddingHorizontal: 30, paddingVertical: 12, borderRadius: 25 }}
+                    onPress={handleLoadMore}
+                    disabled={loadingMore}
+                    activeOpacity={0.8}
+                  >
+                    {loadingMore ? (
+                      <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                      <Text style={{ color: '#fff', fontSize: 16, fontFamily: 'Poppins-Medium', fontWeight: 'bold' }}>Load More Categories</Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              ) : null
+            }
           />
         </>
       ) : (
