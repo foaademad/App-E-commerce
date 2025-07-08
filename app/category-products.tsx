@@ -69,7 +69,7 @@ export default function CategoryProductsScreen() {
       const categoryId = currentCategory.categoryId;
       if (categoryId) {
         // استخدام pageSize = 10 للحصول على 10 منتجات في كل مرة
-        dispatch(getallProductByCategoryId(categoryId, nextPage, 10, true, currentCategory.name, currentCategory.nameEn) as any);
+        dispatch(getallProductByCategoryId(categoryId, nextPage, 20, true, currentCategory.name, currentCategory.nameEn) as any);
       }
     }
   };

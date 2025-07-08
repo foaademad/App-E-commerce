@@ -1,204 +1,180 @@
-// import React from 'react';
-// import { View, Text, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
-// import { useTheme } from '@/context/ThemeContext';
-// import { useLanguage } from '@/context/LanguageContext';
-// import { useRouter } from 'expo-router';
-// import { useTranslation } from 'react-i18next';
-// import { Heart, Star, Plus } from 'lucide-react-native';
-// import { useCart } from '@/context/CartContext';
-// import { useFavorites } from '@/context/FavoritesContext';
-// import { useAuth } from '@/context/AuthContext';
+import { Ionicons } from '@expo/vector-icons';
+import React from 'react';
+import { Dimensions, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ProductDto } from '../../src/store/utility/interfaces/productInterface';
 
-// type ProductCardProps = {
-//   product: any;
-//   isGridView?: boolean;
-// };
+const { width } = Dimensions.get('window');
 
-// const ProductCard: React.FC<ProductCardProps> = ({ product, isGridView = true }) => {
-//   const { colors } = useTheme();
-//   const { isRTL } = useLanguage();
-//   const { t } = useTranslation();
-//   const router = useRouter();
-//   const { addToCart } = useCart();
-//   const { isFavorite, addToFavorites, removeFromFavorites } = useFavorites();
-//   const { user } = useAuth();
-  
-//   const handleProductPress = () => {
-//     router.push(`/product/${product.id}`);
-//   };
-  
-//   const handleAddToCart = (e: any) => {
-//     e.stopPropagation();
-//     if (!user) {
-//       Alert.alert(
-//         t('loginRequired'),
-//         t('pleaseLoginToAddToCart'),
-//         [
-//           { text: t('cancel'), style: 'cancel' },
-//           { text: t('login'), onPress: () => router.push('/login') }
-//         ]
-//       );
-//       return;
-//     }
-//     addToCart({ ...product, quantity: 1 });
-//     router.push('/cart');
-//   };
+interface ProductCardProps {
+  product: ProductDto;
+  onPress?: () => void;
+}
 
-//   const handleFavoritePress = (e: any) => {
-//     e.stopPropagation();
-//     if (!user) {
-//       Alert.alert(
-//         t('loginRequired'),
-//         t('pleaseLoginToAddToFavorites'),
-//         [
-//           { text: t('cancel'), style: 'cancel' },
-//           { text: t('login'), onPress: () => router.push('/login') }
-//         ]
-//       );
-//       return;
-//     }
-//     if (isFavorite(product.id)) {
-//       removeFromFavorites(product.id);
-//     } else {
-//       addToFavorites(product.id);
-//     }
-//   };
+const ProductCard: React.FC<ProductCardProps> = ({ product, onPress }) => {
+  // استخراج السعر من كائن PriceDto
+  const getPrice = () => {
+    if (product.price && typeof product.price === 'object') {
+      return product.price.convertedPrice || product.price.originalPrice?.toString() || '0.00';
+    }
+    return '0.00';
+  };
 
-//   const styles = StyleSheet.create({
-//     container: {
-//       margin: 8,
-//       width: isGridView ? windowWidth / 2 - 24 : '100%',
-//       borderRadius: 8,
-//       backgroundColor: colors.card,
-//       overflow: 'hidden',
-//       shadowColor: '#000',
-//       shadowOffset: { width: 0, height: 2 },
-//       shadowOpacity: 0.1,
-//       shadowRadius: 4,
-//       elevation: 2,
-//     },
-//     listContainer: {
-//       flexDirection: isRTL ? 'row-reverse' : 'row',
-//       width: '100%',
-//     },
-//     image: {
-//       width: '100%',
-//       height: 150,
-//       resizeMode: 'cover',
-//     },
-//     listImage: {
-//       width: 100,
-//       height: 100,
-//       resizeMode: 'cover',
-//     },
-//     contentContainer: {
-//       padding: 12,
-//       flex: 1,
-//     },
-//     favorite: {
-//       position: 'absolute',
-//       top: 8,
-//       right: isRTL ? undefined : 8,
-//       left: isRTL ? 8 : undefined,
-//       width: 30,
-//       height: 30,
-//       borderRadius: 15,
-//       backgroundColor: 'rgba(255, 255, 255, 0.8)',
-//       justifyContent: 'center',
-//       alignItems: 'center',
-//       zIndex: 1,
-//     },
-//     category: {
-//       fontSize: 12,
-//       color: colors.primary,
-//       marginBottom: 4,
-//       fontFamily: 'Roboto-Medium',
-//       textAlign: isRTL ? 'right' : 'left',
-//     },
-//     title: {
-//       fontSize: 14,
-//       fontFamily: 'Roboto-Medium',
-//       color: colors.text,
-//       marginBottom: 4,
-//       textAlign: isRTL ? 'right' : 'left',
-//     },
-//     ratingContainer: {
-//       flexDirection: isRTL ? 'row-reverse' : 'row',
-//       alignItems: 'center',
-//       marginBottom: 8,
-//     },
-//     rating: {
-//       fontSize: 12,
-//       color: colors.textSecondary,
-//       marginLeft: isRTL ? 0 : 4,
-//       marginRight: isRTL ? 4 : 0,
-//       fontFamily: 'Roboto-Regular',
-//     },
-//     priceContainer: {
-//       flexDirection: isRTL ? 'row-reverse' : 'row',
-//       alignItems: 'center',
-//       justifyContent: 'space-between',
-//     },
-//     price: {
-//       fontSize: 16,
-//       fontFamily: 'Roboto-Bold',
-//       color: colors.primary,
-//     },
-//     addButton: {
-//       width: 30,
-//       height: 30,
-//       borderRadius: 15,
-//       backgroundColor: colors.primaryLight,
-//       justifyContent: 'center',
-//       alignItems: 'center',
-//     },
-//   });
+  const getOriginalPrice = () => {
+    if (product.price && typeof product.price === 'object') {
+      return product.price.originalPrice?.toString() || null;
+    }
+    return null;
+  };
 
-//   return (
-//     <TouchableOpacity
-//       style={[styles.container, !isGridView && styles.listContainer]}
-//       onPress={handleProductPress}
-//       activeOpacity={0.8}
-//     >
-//       <TouchableOpacity 
-//         style={styles.favorite}
-//         onPress={handleFavoritePress}
-//       >
-//         <Heart 
-//           size={16} 
-//           color={isFavorite(product.id) ? colors.error : colors.text} 
-//           fill={isFavorite(product.id) ? colors.error : 'transparent'}
-//         />
-//       </TouchableOpacity>
+  const getCurrencySign = () => {
+    if (product.price && typeof product.price === 'object') {
+      return product.price.currencySign || '$';
+    }
+    return '$';
+  };
+
+  return (
+    <TouchableOpacity
+      style={styles.container}
+      onPress={onPress}
+      activeOpacity={0.8}
+    >
+      <View style={styles.imageContainer}>
+        <Image 
+          source={{ 
+            uri: product.mainPictureUrl || product.pictures?.[0]?.url || 'https://via.placeholder.com/150x150?text=No+Image'
+          }} 
+          style={styles.image}
+          resizeMode="cover"
+        />
+        <View style={styles.favoriteButton}>
+          <Ionicons name="heart-outline" size={16} color="#666" />
+        </View>
+      </View>
       
-//       <Image 
-//         source={{ uri: product.image }} 
-//         style={isGridView ? styles.image : styles.listImage} 
-//       />
-      
-//       <View style={styles.contentContainer}>
-//         <Text style={styles.category}>{t(product.category)}</Text>
-//         <Text style={styles.title} numberOfLines={2}>{product.title}</Text>
+      <View style={styles.contentContainer}>
+        <Text style={styles.category} numberOfLines={1}>
+          {product.brandName || 'Category'}
+        </Text>
         
-//         <View style={styles.ratingContainer}>
-//           <Star size={14} color="#F59E0B" fill="#F59E0B" />
-//           <Text style={styles.rating}>{product.rating}</Text>
-//         </View>
+        <Text style={styles.title} numberOfLines={2}>
+          {product.name || product.title || 'Product Name'}
+        </Text>
         
-//         <View style={styles.priceContainer}>
-//           <Text style={styles.price}>${product.price}</Text>
-//           <TouchableOpacity 
-//             style={styles.addButton}
-//             onPress={handleAddToCart}
-//           >
-//             <Plus size={16} color={colors.primary} />
-//           </TouchableOpacity>
-//         </View>
-//       </View>
-//     </TouchableOpacity>
-//   );
-// };
+        <View style={styles.ratingContainer}>
+          <Ionicons name="star" size={12} color="#F59E0B" />
+          <Text style={styles.rating}>
+            {product.vendorScore?.toString() || '4.5'}
+          </Text>
+        </View>
+        
+        <View style={styles.priceContainer}>
+          <Text style={styles.price}>
+            {getCurrencySign()}{getPrice()}
+          </Text>
+          {getOriginalPrice() && parseFloat(getOriginalPrice() || '0') > parseFloat(getPrice() || '0') && (
+            <Text style={styles.originalPrice}>
+              {getCurrencySign()}{getOriginalPrice()}
+            </Text>
+          )}
+        </View>
+        
+        <TouchableOpacity style={styles.addButton}>
+          <Ionicons name="add" size={16} color="#36c7f6" />
+        </TouchableOpacity>
+      </View>
+    </TouchableOpacity>
+  );
+};
 
-// const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 375;
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    marginBottom: 8,
+  },
+  imageContainer: {
+    position: 'relative',
+  },
+  image: {
+    width: '100%',
+    height: 120,
+  },
+  favoriteButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  contentContainer: {
+    padding: 12,
+  },
+  category: {
+    fontSize: 11,
+    color: '#36c7f6',
+    marginBottom: 4,
+    fontFamily: 'Poppins-Medium',
+  },
+  title: {
+    fontSize: 13,
+    fontFamily: 'Poppins-Medium',
+    color: '#2c3e50',
+    marginBottom: 6,
+    lineHeight: 16,
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  rating: {
+    fontSize: 11,
+    color: '#666',
+    marginLeft: 4,
+    fontFamily: 'Poppins-Regular',
+  },
+  priceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  price: {
+    fontSize: 14,
+    fontFamily: 'Poppins-Bold',
+    color: '#36c7f6',
+  },
+  originalPrice: {
+    fontSize: 11,
+    fontFamily: 'Poppins-Regular',
+    color: '#999',
+    textDecorationLine: 'line-through',
+    marginLeft: 4,
+  },
+  addButton: {
+    position: 'absolute',
+    bottom: 12,
+    right: 12,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#f0f9ff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e0f2fe',
+  },
+});
 
-// export default ProductCard;
+export default ProductCard;
