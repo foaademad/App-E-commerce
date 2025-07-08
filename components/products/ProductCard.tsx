@@ -58,7 +58,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onPress }) => {
 
 const styles = StyleSheet.create({
   productCard: {
-    width: '48%',
+    width: 175,
     backgroundColor: '#fff',
     borderRadius: 16,
     shadowColor: '#000',
