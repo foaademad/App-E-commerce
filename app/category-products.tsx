@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, FlatList, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Animated, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
+import ProductCard from '../components/products/ProductCard';
 import { getallProductByCategoryId } from '../src/store/api/productApi';
 import { RootState } from '../src/store/store';
 import { ProductDto } from '../src/store/utility/interfaces/productInterface';
@@ -76,32 +77,7 @@ export default function CategoryProductsScreen() {
 
   // كارد المنتج بنفس تصميم BestSellers
   const renderProduct = ({ item }: { item: ProductDto }) => (
-    <TouchableOpacity
-      style={styles.productCard}
-      onPress={() => handleProductPress(item)}
-      activeOpacity={0.85}
-    >
-      <Image source={{ uri: item.mainPictureUrl }} style={styles.productImage} resizeMode="cover" />
-      <View style={styles.productInfo}>
-        <Text style={styles.productName} numberOfLines={2}>{item.title}</Text>
-        <Text style={styles.weight}>⚖ {item.physicalParameters?.weight ?? '-'} kg</Text>
-        <View style={styles.ratingContainer}>
-          <Text style={styles.rating}>★ 0</Text>
-          <Text style={styles.reviews}>(0)</Text>
-        </View>
-        <Text style={styles.productPrice}>
-          {item.price?.convertedPriceList?.internal?.sign} {item.price?.convertedPriceList?.internal?.price}
-        </Text>
-        <Text style={styles.usdPrice}>
-          ${item.price?.convertedPriceList?.displayedMoneys?.[0]?.price ?? '-'} USD
-        </Text>
-        <Text style={styles.quantity}>{item.masterQuantity} left</Text>
-        <View style={styles.vendorRow}>
-          <Text style={styles.vendor}>{item.vendorDisplayName || item.vendorName}</Text>
-          <Text style={styles.verified}>✔ Verified</Text>
-        </View>
-      </View>
-    </TouchableOpacity>
+    <ProductCard product={item} onPress={() => handleProductPress(item)} />
   );
 
   const renderLoadMoreButton = () => {
@@ -347,45 +323,6 @@ const styles = StyleSheet.create({
   productsList: {
     padding: 10,
   },
-  productCard: {
-    flex: 1,
-    backgroundColor: '#fff',
-    margin: 5,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-    overflow: 'hidden',
-  },
-  productImage: {
-    width: '100%',
-    height: 150,
-  },
-  productInfo: {
-    padding: 12,
-  },
-  productName: {
-    fontSize: 14,
-    fontFamily: 'Poppins-Medium',
-    color: '#2c3e50',
-    marginBottom: 4,
-  },
-  productPrice: {
-    fontSize: 16,
-    fontFamily: 'Poppins-SemiBold',
-    color: '#36c7f6',
-    marginBottom: 2,
-  },
-  productBrand: {
-    fontSize: 12,
-    fontFamily: 'Poppins-Regular',
-    color: '#666',
-  },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -449,53 +386,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Poppins-Regular',
     color: '#2c3e50',
-  },
-  weight: {
-    fontSize: 12,
-    fontFamily: 'Poppins-Regular',
-    color: '#666',
-  },
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 2,
-  },
-  rating: {
-    fontSize: 12,
-    fontFamily: 'Poppins-SemiBold',
-    color: '#36c7f6',
-  },
-  reviews: {
-    fontSize: 12,
-    fontFamily: 'Poppins-Regular',
-    color: '#666',
-    marginLeft: 4,
-  },
-  usdPrice: {
-    fontSize: 12,
-    fontFamily: 'Poppins-Regular',
-    color: '#666',
-  },
-  quantity: {
-    fontSize: 12,
-    fontFamily: 'Poppins-Regular',
-    color: '#666',
-  },
-  vendorRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 2,
-  },
-  vendor: {
-    fontSize: 12,
-    fontFamily: 'Poppins-Regular',
-    color: '#666',
-  },
-  verified: {
-    fontSize: 12,
-    fontFamily: 'Poppins-Regular',
-    color: '#36c7f6',
-    marginLeft: 4,
   },
   clearButton: {
     padding: 5,

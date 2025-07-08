@@ -1,9 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
-import { Dimensions, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { ProductDto } from '../../src/store/utility/interfaces/productInterface';
-
-const { width } = Dimensions.get('window');
 
 interface ProductCardProps {
   product: ProductDto;
@@ -11,169 +9,145 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, onPress }) => {
-  // استخراج السعر من كائن PriceDto
-  const getPrice = () => {
-    if (product.price && typeof product.price === 'object') {
-      return product.price.convertedPrice || product.price.originalPrice?.toString() || '0.00';
-    }
-    return '0.00';
-  };
-
-  const getOriginalPrice = () => {
-    if (product.price && typeof product.price === 'object') {
-      return product.price.originalPrice?.toString() || null;
-    }
-    return null;
-  };
-
-  const getCurrencySign = () => {
-    if (product.price && typeof product.price === 'object') {
-      return product.price.currencySign || '$';
-    }
-    return '$';
-  };
+  const [favourited, setFavourited] = useState(false);
 
   return (
     <TouchableOpacity
-      style={styles.container}
+      style={styles.productCard}
       onPress={onPress}
-      activeOpacity={0.8}
+      activeOpacity={0.85}
     >
       <View style={styles.imageContainer}>
-        <Image 
-          source={{ 
-            uri: product.mainPictureUrl || product.pictures?.[0]?.url || 'https://via.placeholder.com/150x150?text=No+Image'
-          }} 
-          style={styles.image}
+        <Image
+          source={{ uri: product.mainPictureUrl || product.pictures?.[0]?.url || 'https://via.placeholder.com/150x150?text=No+Image' }}
+          style={styles.productImage}
           resizeMode="cover"
         />
-        <View style={styles.favoriteButton}>
-          <Ionicons name="heart-outline" size={16} color="#666" />
-        </View>
-      </View>
-      
-      <View style={styles.contentContainer}>
-        <Text style={styles.category} numberOfLines={1}>
-          {product.brandName || 'Category'}
-        </Text>
-        
-        <Text style={styles.title} numberOfLines={2}>
-          {product.name || product.title || 'Product Name'}
-        </Text>
-        
-        <View style={styles.ratingContainer}>
-          <Ionicons name="star" size={12} color="#F59E0B" />
-          <Text style={styles.rating}>
-            {product.vendorScore?.toString() || '4.5'}
-          </Text>
-        </View>
-        
-        <View style={styles.priceContainer}>
-          <Text style={styles.price}>
-            {getCurrencySign()}{getPrice()}
-          </Text>
-          {getOriginalPrice() && parseFloat(getOriginalPrice() || '0') > parseFloat(getPrice() || '0') && (
-            <Text style={styles.originalPrice}>
-              {getCurrencySign()}{getOriginalPrice()}
-            </Text>
-          )}
-        </View>
-        
-        <TouchableOpacity style={styles.addButton}>
-          <Ionicons name="add" size={16} color="#36c7f6" />
+        <TouchableOpacity
+          style={styles.favIcon}
+          onPress={e => {
+            e.stopPropagation();
+            setFavourited(fav => !fav);
+          }}
+        >
+          <Ionicons name={favourited ? 'heart' : 'heart-outline'} size={22} color={favourited ? '#e74c3c' : '#888'} />
         </TouchableOpacity>
+      </View>
+      <View style={styles.productInfo}>
+        <Text style={styles.productName} numberOfLines={2}>{product.title || product.name }</Text>
+        <Text style={styles.weight}>⚖ {product.physicalParameters?.weight ?? '-'} kg</Text>
+        <View style={styles.ratingContainer}>
+          <Text style={styles.rating}>★ 0</Text>
+          <Text style={styles.reviews}>(0)</Text>
+        </View>
+        <Text style={styles.productPrice}>
+          {product.price?.convertedPriceList?.internal?.sign} {product.price?.convertedPriceList?.internal?.price}
+        </Text>
+        <Text style={styles.usdPrice}>
+          ${product.price?.convertedPriceList?.displayedMoneys?.[0]?.price ?? '-'} USD
+        </Text>
+        <Text style={styles.quantity}>{product.masterQuantity} left</Text>
+        <View style={styles.vendorRow}>
+          <Text style={styles.vendor}>{product.vendorDisplayName || product.vendorName}</Text>
+          <Text style={styles.verified}>✔ Verified</Text>
+        </View>
       </View>
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  productCard: {
+    width: '48%',
     backgroundColor: '#fff',
-    borderRadius: 12,
-    overflow: 'hidden',
+    borderRadius: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.10,
     shadowRadius: 4,
-    elevation: 3,
-    marginBottom: 8,
+    elevation: 4,
+    overflow: 'hidden',
+    position: 'relative',
+    margin: 5,
   },
   imageContainer: {
     position: 'relative',
   },
-  image: {
+  productImage: {
     width: '100%',
     height: 120,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    backgroundColor: '#f4f4f4',
   },
-  favoriteButton: {
+  favIcon: {
     position: 'absolute',
-    top: 8,
-    right: 8,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    top: 10,
+    right: 10,
+    backgroundColor: 'rgba(255,255,255,0.85)',
+    borderRadius: 16,
+    padding: 4,
+    zIndex: 2,
   },
-  contentContainer: {
+  productInfo: {
     padding: 12,
   },
-  category: {
-    fontSize: 11,
-    color: '#36c7f6',
+  productName: {
+    fontSize: 14,
+    fontWeight: '600',
     marginBottom: 4,
-    fontFamily: 'Poppins-Medium',
+    color: '#222',
   },
-  title: {
-    fontSize: 13,
-    fontFamily: 'Poppins-Medium',
-    color: '#2c3e50',
-    marginBottom: 6,
-    lineHeight: 16,
+  weight: {
+    fontSize: 12,
+    color: '#888',
+    marginBottom: 2,
   },
   ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 2,
   },
   rating: {
-    fontSize: 11,
-    color: '#666',
-    marginLeft: 4,
-    fontFamily: 'Poppins-Regular',
+    fontSize: 12,
+    color: '#FFD700',
+    marginRight: 3,
   },
-  priceContainer: {
+  reviews: {
+    fontSize: 12,
+    color: '#666',
+  },
+  productPrice: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#36c7f6',
+    marginBottom: 2,
+  },
+  usdPrice: {
+    fontSize: 13,
+    color: '#888',
+    marginBottom: 2,
+  },
+  quantity: {
+    fontSize: 12,
+    color: '#888',
+    marginBottom: 2,
+  },
+  vendorRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 8,
+    marginTop: 4,
   },
-  price: {
-    fontSize: 14,
-    fontFamily: 'Poppins-Bold',
+  vendor: {
+    fontSize: 12,
     color: '#36c7f6',
+    fontWeight: 'bold',
+    marginRight: 6,
   },
-  originalPrice: {
-    fontSize: 11,
-    fontFamily: 'Poppins-Regular',
-    color: '#999',
-    textDecorationLine: 'line-through',
-    marginLeft: 4,
-  },
-  addButton: {
-    position: 'absolute',
-    bottom: 12,
-    right: 12,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#f0f9ff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#e0f2fe',
+  verified: {
+    fontSize: 12,
+    color: '#4CAF50',
+    fontWeight: 'bold',
   },
 });
 
