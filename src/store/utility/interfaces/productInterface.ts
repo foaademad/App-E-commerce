@@ -5,6 +5,7 @@ export interface ProductBaseDto {
     title: string;
     isTitleManuallyTranslated: boolean;
     originalTitle: string;
+    
   }
   
   export interface PictureDto {

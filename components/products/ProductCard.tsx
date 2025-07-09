@@ -10,7 +10,10 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, onPress }) => {
   const [favourited, setFavourited] = useState(false);
-
+  const rating = Number(product.featuredValues?.find(value => value.name === 'rating')?.value) || 0;
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating - fullStars >= 0.5;
+  const starsArray = Array(fullStars).fill('★');
   return (
     <TouchableOpacity
       style={styles.productCard}
@@ -37,8 +40,17 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onPress }) => {
         <Text style={styles.productName} numberOfLines={2}>{product.title || product.name }</Text>
         <Text style={styles.weight}>⚖ {product.physicalParameters?.weight ?? '-'} kg</Text>
         <View style={styles.ratingContainer}>
-          <Text style={styles.rating}>★ 0</Text>
-          <Text style={styles.reviews}>(0)</Text>
+          {rating > 0 ? (
+            <>
+              {[...Array(fullStars)].map((_, i) => (
+                <Ionicons key={i} name="star" size={12} color="#FFD700" />
+              ))}
+              {hasHalfStar && <Ionicons name="star-half" size={12} color="#FFD700" />}
+              <Text style={styles.rating}> {`(${rating})`}</Text>
+            </>
+          ) : (
+            <Text style={styles.rating}>No ratings yet</Text>
+          )}
         </View>
         <Text style={styles.productPrice}>
           {product.price?.convertedPriceList?.internal?.sign} {product.price?.convertedPriceList?.internal?.price}
@@ -48,8 +60,16 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onPress }) => {
         </Text>
         <Text style={styles.quantity}>{product.masterQuantity} left</Text>
         <View style={styles.vendorRow}>
-          <Text style={styles.vendor}>{product.vendorDisplayName || product.vendorName}</Text>
-          <Text style={styles.verified}>✔ Verified</Text>
+          {/* <Text style={styles.vendor}>{product.vendorDisplayName.split(' ').slice(0, 7).join("...........") || product.vendorName.slice(0, 7).join("...........")}</Text> */}
+          <Text style={styles.vendor}>
+            {(product.vendorDisplayName || product.vendorName || '').slice(0, 13)}
+            {((product.vendorDisplayName || product.vendorName || '').length > 13) ? '...' : ''}
+          </Text>
+          {product.isSellAllowed ? (
+            <Text style={styles.verified}>✔ Verified</Text>
+          ) : (
+            <Text style={[styles.verified, { color: 'gray' } ]}>Not Verified</Text>
+          )}
         </View>
       </View>
     </TouchableOpacity>
@@ -148,6 +168,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#4CAF50',
     fontWeight: 'bold',
+
   },
 });
 

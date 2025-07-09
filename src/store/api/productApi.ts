@@ -13,6 +13,8 @@ export const getProducts = () => async (dispatch: any) => {
         } else {
             dispatch(setError("Failed to fetch products"));
         }
+        console.log(data);
+        
     } catch (error: any) {
         const errorMessage = error?.response?.data?.message || error?.message || 'An error occurred';
         dispatch(setError(errorMessage));

@@ -34,7 +34,7 @@ function shuffleArray<T>(array: T[]): T[] {
   return arr;
 }
 
-export default function DailyDeals() {
+export default function DailyDeals({ onProductsChange }: { onProductsChange?: (products: ProductDto[]) => void }) {
   const router = useRouter();
   const [products, setProducts] = useState<ProductDto[]>([]);
   const [categoryPages, setCategoryPages] = useState<{ [catId: string]: number }>({});
@@ -71,6 +71,7 @@ export default function DailyDeals() {
       );
       setProducts(prev => {
         const merged = append ? [...prev, ...allResults] : allResults;
+        if (onProductsChange) onProductsChange(merged); // تمرير المنتجات للأب
         return shuffleArray(merged);
       });
       setHasMore(anyHasMore);
@@ -179,12 +180,12 @@ const styles = StyleSheet.create({
   productsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
+   
     paddingBottom: 8,
     paddingLeft: 10,
   },
   productWrapper: {
-    width: '48%',
+   
     marginBottom: 14,
   },
   loadMoreButton: {

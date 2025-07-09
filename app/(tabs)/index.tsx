@@ -113,6 +113,7 @@ const HomeScreen = () => {
   const { currentCategory, productsBest, productsNew } = useSelector((state: RootState) => state.product);
   const [searchText, setSearchText] = useState('');
   const [searchResults, setSearchResults] = useState<ProductDto[]>([]);
+  const [dailyDealsProducts, setDailyDealsProducts] = useState<ProductDto[]>([]);
 
   useEffect(() => {
     dispatch(getProducts());
@@ -142,7 +143,7 @@ const HomeScreen = () => {
     }
     const lower = text.toLowerCase();
     // Combine products and remove duplicates based on id
-    const allProducts = [...productsBest, ...productsNew];
+    const allProducts = [...productsBest, ...productsNew, ...dailyDealsProducts];
     const uniqueProducts = allProducts.filter((item, index, self) => 
       index === self.findIndex(p => p.id === item.id)
     );
@@ -225,7 +226,7 @@ const HomeScreen = () => {
             <Categories />
             <NewArrivals />
             <BestSellers />
-            <DailyDeals />
+            <DailyDeals onProductsChange={setDailyDealsProducts} />
           </ScrollView>
         </>
       )}

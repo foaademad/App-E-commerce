@@ -1,12 +1,26 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Animated, Dimensions, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import ProductCard from '../components/products/ProductCard';
 import { getallProductByCategoryId } from '../src/store/api/productApi';
 import { RootState } from '../src/store/store';
 import { ProductDto } from '../src/store/utility/interfaces/productInterface';
+
+const { width: screenWidth } = Dimensions.get('window');
+const ITEM_WIDTH = 175; // عرض كل منتج
+const ITEM_MARGIN = 10; // الهامش بين المنتجات
+const CONTAINER_PADDING = 20; // padding الحاوية
+
+// حساب عدد الأعمدة بناءً على عرض الشاشة
+const calculateNumColumns = () => {
+  const width = Dimensions.get('window').width;
+  if (width >= 1200) return 6; // تابلت كبير أو ديسكتوب
+  if (width >= 900) return 5;  // تابلت landscape
+  if (width >= 600) return 4;  // تابلت صغير
+  return 2; // موبايل
+};
 
 export default function CategoryProductsScreen() {
   const dispatch = useDispatch();
@@ -18,6 +32,19 @@ export default function CategoryProductsScreen() {
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const searchAnimation = useRef(new Animated.Value(0)).current;
   const searchInputRef = useRef<TextInput>(null);
+  const [numColumns, setNumColumns] = useState(calculateNumColumns());
+
+  // إعادة حساب عدد الأعمدة عند تغيير حجم الشاشة
+  useEffect(() => {
+    const updateNumColumns = () => {
+      setNumColumns(calculateNumColumns());
+    };
+
+    const subscription = Dimensions.addEventListener('change', updateNumColumns);
+    // إعادة حساب عند تحميل المكون أيضاً
+    updateNumColumns();
+    return () => subscription?.remove();
+  }, []);
 
   const filteredProducts = currentCategory?.products?.filter(
     (item) =>
@@ -219,13 +246,15 @@ export default function CategoryProductsScreen() {
 
       {filteredProducts.length > 0 ? (
         <FlatList
+          key={numColumns}
           data={filteredProducts}
           renderItem={renderProduct}
           keyExtractor={(item, index) => item.id || `product-${index}`}
-          numColumns={2}
+          numColumns={numColumns}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.productsList}
           ListFooterComponent={renderLoadMoreButton}
+          columnWrapperStyle={styles.productRow}
         />
       ) : (
         <View style={styles.emptyContainer}>
@@ -389,5 +418,9 @@ const styles = StyleSheet.create({
   },
   clearButton: {
     padding: 5,
+  },
+  productRow: {
+    justifyContent: 'space-between',
+    marginBottom: ITEM_MARGIN,
   },
 }); 
